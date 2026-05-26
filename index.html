@@ -1,3 +1,4 @@
+```react
 import React, { useState, useEffect } from 'react';
 import { initializeApp } from 'firebase/app';
 import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from 'firebase/auth';
@@ -8,7 +9,7 @@ import {
 } from 'lucide-react';
 
 // ==========================================
-// 1. Firebase 初始化 (安全對接)
+// 1. Firebase 初始化
 // ==========================================
 const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
 const app = initializeApp(firebaseConfig);
@@ -28,7 +29,7 @@ const Toast = ({ message, type, onClose }) => {
   const bgColor = type === 'success' ? 'bg-stone-900' : type === 'warning' ? 'bg-amber-600' : 'bg-red-700';
   
   return (
-    <div className={`fixed top-24 left-1/2 -translate-x-1/2 z-[100] flex items-center px-6 py-3.5 rounded-2xl shadow-2xl text-white ${bgColor} border border-stone-800 animate-bounce`}>
+    <div className={`fixed top-24 left-1/2 -translate-x-1/2 z-[100] flex items-center px-6 py-3.5 rounded-2xl shadow-2xl text-white ${bgColor} border border-stone-850 animate-bounce`}>
       <span className="text-xs font-bold tracking-wide flex items-center">
         {type === 'success' && <CheckCircle className="w-4 h-4 mr-2 text-amber-500" />}
         {type === 'warning' && <Clock className="w-4 h-4 mr-2 text-white" />}
@@ -45,48 +46,14 @@ export default function App() {
   const [activeUid, setActiveUid] = useState(null); 
   const [userProfile, setUserProfile] = useState(null);
   
-  // 核心分頁路由狀態 (新增 brand-story 與 courses-flywheel)
+  // 核心路由 (home, brand-story, courses, practitioner, student, directory, faq)
   const [currentView, setCurrentView] = useState('home'); 
   const [authModal, setAuthModal] = useState({ isOpen: false, mode: 'login', defaultRole: 'student' });
   const [toast, setToast] = useState(null);
-  const [readingArticle, setReadingArticle] = useState(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [readingArticle, setReadingArticle] = useState(null);
 
-  // 靜態資料模擬：近期課程
-  const coursesData = [
-    {
-      id: 'course-1',
-      title: '職涯諮詢師「微光孵化」實戰陪跑計畫',
-      tag: '持證新手 / 轉型突破',
-      period: '為期 6 個月深度陪跑',
-      desc: '專注於消除「理論學習」與「實務執業」之間的斷層，不談速成包裝，由 CDI 國際生涯發展導師手把手帶領進入真實戰場。',
-      features: ['1對1 策略啟動會議', '12小時真實個案媒合實戰', '雙月同儕團體督導 (共3場)', '1對1 深度精準打擊督導 (2次)', '全台首創對賭激勵制學費減免'],
-      price: '計畫保證金 $6,000 (任務完成後退還 $4,000，實際僅需 $2,000)',
-      badge: '熱烈招募中'
-    },
-    {
-      id: 'course-2',
-      title: '大專院校「定位未來，職涯啟航」校園合作計畫',
-      tag: 'B2B 學校 / 團體合作',
-      period: '客製化單場或系列帶領',
-      desc: '打破傳統單向說教模式，採用「點、線、面」三階段完整輔導機制，全面引發學生內在動機，對接真實職場需求。',
-      features: ['90分鐘高互動探索講座 (面)', '高需求學生 1對1 深度諮詢 (點)', '校方專屬學習單與後續輔導追蹤指標', '符合勞動部與政府經費補助提案規範'],
-      price: '依據校方需求與梯次規格客製化報價',
-      badge: '精選合作'
-    },
-    {
-      id: 'course-3',
-      title: '《職引者說》跨界諮詢師聲音與專欄專訪企劃',
-      tag: '個人品牌建立 / IP 賦能',
-      period: '每位受邀者 30-40 分鐘高效錄製',
-      desc: '為現役或剛起步的諮詢師打造個人品牌曝光。透過真實經驗與商業變現模式分享，成為新手持證者的成功模型 (Role Model)。',
-      features: ['精準個人品牌流量曝光', '一源多用：聲音節目 + SEO 深度文章 + 社群短影音', '線上遠端高效錄製、無負擔參與', '精準對接對職涯高度關注的潛在受眾'],
-      price: '首波主打行銷補貼，符合資格者免費受邀',
-      badge: '限定邀約'
-    }
-  ];
-
-  // 初始化 Firebase Auth
+  // 初始化 Auth
   useEffect(() => {
     const initAuth = async () => {
       try {
@@ -95,20 +62,14 @@ export default function App() {
         } else {
           await signInAnonymously(auth);
         }
-      } catch (error) {
-        console.error("Auth init error:", error);
-      }
+      } catch (error) {}
     };
     initAuth();
   }, []);
 
-  // 監聽使用者設定檔
+  // 同步 Profile
   useEffect(() => {
-    if (!activeUid) {
-      setUserProfile(null);
-      return;
-    }
-    
+    if (!activeUid) { setUserProfile(null); return; }
     const profileRef = doc(db, 'artifacts', appId, 'public', 'data', 'profiles', activeUid);
     const unsubscribe = onSnapshot(profileRef, (docSnap) => {
       if (docSnap.exists()) {
@@ -121,10 +82,7 @@ export default function App() {
         setUserProfile(null);
         setCurrentView('home');
       }
-    }, (error) => {
-      console.error("Error fetching profile:", error);
     });
-
     return () => unsubscribe();
   }, [activeUid]);
 
@@ -132,7 +90,7 @@ export default function App() {
 
   const handleLogout = () => {
     setActiveUid(null);
-    showToast('已安全登出，回到首頁', 'success');
+    showToast('已登出，回到首頁', 'success');
     setCurrentView('home');
   };
 
@@ -143,468 +101,71 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#fafaf9] text-stone-800 antialiased font-sans pt-20">
+    <div className="min-h-screen bg-[#fafaf9] text-stone-850 antialiased font-sans pt-20">
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
       
-      {/* 📌 置頂固定式導航列 Navbar */}
+      {/* 📌 固定式導航列 */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-stone-200 shadow-sm h-20 flex items-center">
         <div className="max-w-7xl mx-auto px-4 w-full flex items-center justify-between">
-          
-          {/* Logo 區 */}
           <div className="flex items-center space-x-3 cursor-pointer" onClick={() => handleNavigate('home')}>
             <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-stone-900 to-stone-700 flex items-center justify-center text-white font-bold shadow-md shadow-stone-900/10">
               <Star className="w-5 h-5 text-amber-500" />
             </div>
             <div>
-              <span className="text-base font-black tracking-wider text-stone-950 block leading-none">職域所</span>
+              <span className="text-base font-black tracking-wider text-stone-950 block leading-none uppercase">職域所</span>
               <span className="text-[9px] font-bold text-amber-600 tracking-widest uppercase mt-1 block">CRAFT hub</span>
             </div>
           </div>
 
-          {/* 橫向公共選單 (桌面版) */}
           <div className="hidden lg:flex items-center space-x-6 text-xs font-bold text-stone-500 tracking-wider">
-            <button onClick={() => handleNavigate('home')} className={`hover:text-stone-950 transition ${currentView === 'home' ? 'text-stone-950 border-b-2 border-stone-950 pb-1' : ''}`}>首頁介紹</button>
-            <button onClick={() => handleNavigate('brand-story')} className={`hover:text-stone-950 transition ${currentView === 'brand-story' ? 'text-stone-950 border-b-2 border-stone-950 pb-1' : ''}`}>關於我們</button>
-            <button onClick={() => handleNavigate('courses-flywheel')} className={`hover:text-stone-950 transition ${currentView === 'courses-flywheel' ? 'text-stone-950 border-b-2 border-stone-950 pb-1' : ''}`}>近期課程</button>
+            <button onClick={() => handleNavigate('home')} className={`hover:text-stone-950 transition ${currentView === 'home' ? 'text-stone-950 border-b-2 border-stone-950 pb-1' : ''}`}>首頁</button>
+            <button onClick={() => handleNavigate('brand-story')} className={`hover:text-stone-950 transition ${currentView === 'brand-story' ? 'text-stone-950 border-b-2 border-stone-950 pb-1' : ''}`}>品牌故事</button>
+            <button onClick={() => handleNavigate('courses')} className={`hover:text-stone-950 transition ${currentView === 'courses' ? 'text-stone-950 border-b-2 border-stone-950 pb-1' : ''}`}>近期課程</button>
             <button onClick={() => handleNavigate('practitioner-info')} className={`hover:text-stone-950 transition ${currentView === 'practitioner-info' ? 'text-stone-950 border-b-2 border-stone-950 pb-1' : ''}`}>諮詢師加盟</button>
             <button onClick={() => handleNavigate('student-info')} className={`hover:text-stone-950 transition ${currentView === 'student-info' ? 'text-stone-950 border-b-2 border-stone-950 pb-1' : ''}`}>學員導航</button>
-            <button onClick={() => handleNavigate('coach-directory')} className={`hover:text-stone-950 transition ${currentView === 'coach-directory' ? 'text-stone-950 border-b-2 border-stone-950 pb-1' : ''}`}>尋找諮詢師</button>
-            <button onClick={() => handleNavigate('insights')} className={`hover:text-stone-950 transition ${currentView === 'insights' ? 'text-stone-950 border-b-2 border-stone-950 pb-1' : ''}`}>觀點專欄</button>
-            <button onClick={() => handleNavigate('faq')} className={`hover:text-stone-950 transition ${currentView === 'faq' ? 'text-stone-950 border-b-2 border-stone-950 pb-1' : ''}`}>常見問答</button>
+            <button onClick={() => handleNavigate('coach-directory')} className={`hover:text-stone-950 transition ${currentView === 'coach-directory' ? 'text-stone-950 border-b-2 border-stone-950 pb-1' : ''}`}>特約導師</button>
+            <button onClick={() => handleNavigate('insights')} className={`hover:text-stone-950 transition ${currentView === 'insights' ? 'text-stone-950 border-b-2 border-stone-950 pb-1' : ''}`}>專欄</button>
+            <button onClick={() => handleNavigate('faq')} className={`hover:text-stone-950 transition ${currentView === 'faq' ? 'text-stone-950 border-b-2 border-stone-950 pb-1' : ''}`}>FAQ</button>
           </div>
 
-          {/* 右側登入狀態與行動選單開關 */}
           <div className="flex items-center space-x-3">
             {userProfile ? (
               <div className="flex items-center space-x-2">
-                <div className="hidden sm:flex flex-col items-end mr-1">
-                  <span className="text-xs font-bold text-stone-900">{userProfile.name}</span>
-                  <span className="text-[9px] font-bold text-stone-400 uppercase mt-0.5">
-                    {userProfile.role === 'admin' ? '營運主管' : userProfile.role === 'practitioner' ? '加盟諮詢師' : '探路學員'}
-                  </span>
-                </div>
-                <button 
-                  onClick={() => {
-                    if (userProfile.role === 'admin') handleNavigate('dashboard-admin');
-                    else if (userProfile.role === 'practitioner') handleNavigate('dashboard-practitioner');
-                    else if (userProfile.role === 'student') handleNavigate('dashboard-student');
-                  }}
-                  className="bg-stone-950 hover:bg-stone-850 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition"
-                >
-                  我的後台
-                </button>
-                <button onClick={handleLogout} className="text-stone-400 hover:text-stone-700 p-2">
-                  <LogOut className="w-4 h-4" />
-                </button>
+                <button onClick={() => handleNavigate('dashboard-' + userProfile.role)} className="bg-stone-950 hover:bg-stone-850 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition">我的後台</button>
+                <button onClick={handleLogout} className="text-stone-400 p-2"><LogOut className="w-4 h-4" /></button>
               </div>
             ) : (
-              <button 
-                onClick={() => setAuthModal({ isOpen: true, mode: 'login' })}
-                className="bg-stone-950 hover:bg-stone-850 text-white px-5 py-2.5 rounded-full text-xs font-bold transition shadow-sm"
-              >
-                登入 / 註冊
-              </button>
+              <button onClick={() => setAuthModal({ isOpen: true, mode: 'login' })} className="bg-stone-950 text-white px-5 py-2.5 rounded-full text-xs font-bold transition">登入 / 註冊</button>
             )}
-
-            {/* 行動端漢堡排開關 */}
-            <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="lg:hidden p-2 text-stone-500 hover:text-stone-900">
-              {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
+            <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="lg:hidden p-2 text-stone-500"><Menu className="w-6 h-6" /></button>
           </div>
         </div>
       </nav>
 
-      {/* 行動端側邊選單 */}
+      {/* 行動端側拉選單 */}
       {isMobileMenuOpen && (
         <div className="fixed top-20 left-0 right-0 bg-white border-b border-stone-200 shadow-xl z-40 lg:hidden flex flex-col p-6 space-y-4 font-bold text-sm text-stone-600 animate-fade-in">
-          <button onClick={() => handleNavigate('home')} className="text-left py-2 border-b border-stone-100">首頁介紹</button>
-          <button onClick={() => handleNavigate('brand-story')} className="text-left py-2 border-b border-stone-100">關於我們 (核心故事)</button>
-          <button onClick={() => handleNavigate('courses-flywheel')} className="text-left py-2 border-b border-stone-100">近期課程 & 成長飛輪</button>
-          <button onClick={() => handleNavigate('practitioner-info')} className="text-left py-2 border-b border-stone-100">諮詢師加盟專區</button>
-          <button onClick={() => handleNavigate('student-info')} className="text-left py-2 border-b border-stone-100">學員導航專區</button>
-          <button onClick={() => handleNavigate('coach-directory')} className="text-left py-2 border-b border-stone-100">尋找諮詢師</button>
-          <button onClick={() => handleNavigate('insights')} className="text-left py-2 border-b border-stone-100">觀點專欄</button>
-          <button onClick={() => handleNavigate('faq')} className="text-left py-2 border-b border-stone-100">常見問答</button>
+          <button onClick={() => handleNavigate('home')}>首頁介紹</button>
+          <button onClick={() => handleNavigate('brand-story')}>品牌故事</button>
+          <button onClick={() => handleNavigate('courses')}>近期課程</button>
+          <button onClick={() => handleNavigate('practitioner-info')}>諮詢師加盟</button>
+          <button onClick={() => handleNavigate('student-info')}>學員導航</button>
+          <button onClick={() => handleNavigate('coach-directory')}>特約導師</button>
+          <button onClick={() => handleNavigate('insights')}>觀點專欄</button>
+          <button onClick={() => handleNavigate('faq')}>常見問答</button>
         </div>
       )}
 
-      {/* ==========================================
-          4. 路由分頁切換主體
-         ========================================== */}
-      <main className="max-w-7xl mx-auto px-4 py-8">
+      {/* 分頁內容切換 */}
+      <main className="min-h-[70vh]">
+        {currentView === 'home' && <HomeView setCurrentView={handleNavigate} openAuth={(m, r) => setAuthModal({ isOpen: true, mode: m, defaultRole: r })} />}
+        {currentView === 'brand-story' && <BrandStoryView />}
+        {currentView === 'courses' && <CoursesFlywheelView showToast={showToast} openAuth={(m, r) => setAuthModal({ isOpen: true, mode: m, defaultRole: r })} />}
+        {currentView === 'practitioner-info' && <PractitionerInfoView showToast={showToast} openAuth={(m, r) => setAuthModal({ isOpen: true, mode: m, defaultRole: r })} />}
+        {currentView === 'student-info' && <StudentInfoView openAuth={(m, r) => setAuthModal({ isOpen: true, mode: m, defaultRole: r })} />}
+        {currentView === 'coach-directory' && <CoachDirectoryView openAuth={(m, r) => setAuthModal({ isOpen: true, mode: m, defaultRole: r })} />}
+        {currentView === 'insights' && <InsightsView readArticle={setReadingArticle} />}
+        {currentView === 'faq' && <FaqView />}
         
-        {/* ─────────────── PAGE 1: 品牌故事專頁 (關於我們) ─────────────── */}
-        {currentView === 'brand-story' && (
-          <div className="space-y-16 animate-fade-in">
-            
-            {/* 1. 品牌緣起與核心信念 */}
-            <section className="bg-white rounded-3xl p-8 md:p-12 border border-stone-200 shadow-sm relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-[#C67C56]/5 rounded-full blur-3xl -mr-20 -mt-20"></div>
-              <div className="max-w-3xl">
-                <span className="text-xs font-bold text-[#C67C56] tracking-widest uppercase bg-[#C67C56]/10 px-3 py-1 rounded-full">Brand Origin</span>
-                <h2 className="text-2xl md:text-3xl font-black text-stone-950 mt-4 tracking-tight">讓助人者的專業微光，匯聚成塔</h2>
-                <p className="text-stone-500 text-sm mt-2 font-medium">職域所 (2026 Est.) ── 專專為職涯諮詢師打造的實戰養成與商業賦能社群</p>
-                
-                <div className="mt-8 space-y-4 text-stone-600 text-sm leading-relaxed font-normal">
-                  <p>
-                    我們始終相信，諮詢不只是一項搬弄理論的技術，更是一門需要時間<strong>「熟成」</strong>的專業手藝。
-                    我們成立的初衷，是為了讓每一份想要支持、傾聽生命的助人初心，都能具備承接生命重量的真實底氣。
-                  </p>
-                  <blockquote className="border-l-4 border-[#C67C56] pl-4 my-6 text-stone-700 font-medium italic bg-stone-50 py-2 rounded-r-xl">
-                    「面對真實的案主，內心總會有一些虛怯與心虛嗎？想給出明確的方向，卻又害怕誤導了對方？」
-                  </blockquote>
-                  <p>
-                    這種猶豫與謹慎，不是因為你學得不夠多，而是因為你對「承接另一個生命」這份專業心存敬畏。
-                    而這份敬畏心，正是你成為優秀專業執業者的重要起點。
-                    <strong>職域所 (CRAFT hub)</strong> 的存在，就是為了搭建新手與專家之間的引路橋樑，陪你走過這段最不容易的起步維護期。
-                  </p>
-                </div>
-              </div>
-            </section>
-
-            {/* 2. C.R.A.F.T. 核心五大維度 */}
-            <section className="space-y-6">
-              <div className="text-center max-w-xl mx-auto">
-                <h3 className="text-xl font-black text-stone-950 tracking-tight">C.R.A.F.T. 五大核心架構模型</h3>
-                <p className="text-stone-400 text-xs font-bold mt-1 tracking-wider uppercase">The Core Framework of CRAFT hub</p>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-                {[
-                  { letter: 'C', title: 'Calling 志業認同', desc: '不跟風、不盲從，協助諮詢師定位核心天賦，將熱情轉化為一生的志業承諾。', color: 'bg-stone-900 text-white' },
-                  { letter: 'R', title: 'Realization 價值實現', desc: '拒絕紙上談兵，對接市場真實個案，將無形的深度理論轉譯為看得見的改變。', color: 'bg-stone-100 text-stone-900 border border-stone-200' },
-                  { letter: 'A', title: 'Acceleration 成長動能', desc: '提供正規一站式 CEP 續證學分與進階職能工作坊，全面打通專業技能斷層。', color: 'bg-[#C67C56] text-white' },
-                  { letter: 'F', title: 'Firm 聯合事務所', desc: '打造無邊界的共同事務所生态圈，提供派案、督導與法律倫理的全面兜底支持。', color: 'bg-stone-50 text-stone-900 border border-stone-200' },
-                  { letter: 'T', title: 'Top-tier 頂尖職人', desc: '依循資深導師傳承制，經由刻意練習與覆盤，淬煉出獨一無二的個人品牌 IP。', color: 'bg-amber-500 text-stone-950 font-black' }
-                ].map((item, idx) => (
-                  <div key={idx} className="bg-white rounded-2xl p-5 border border-stone-200 shadow-sm flex flex-col justify-between hover:translate-y-[-4px] transition duration-300">
-                    <div>
-                      <div className={`w-10 h-10 rounded-xl ${item.color} flex items-center justify-center text-lg font-black tracking-none mb-4`}>
-                        {item.letter}
-                      </div>
-                      <h4 className="text-xs font-black text-stone-900 mb-2">{item.title}</h4>
-                      <p className="text-stone-500 text-[11px] leading-relaxed">{item.desc}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
-
-            {/* 3. 創始團隊介紹 */}
-            <section className="space-y-6">
-              <div className="text-center max-w-xl mx-auto">
-                <h3 className="text-xl font-black text-stone-950 tracking-tight">創始核心團隊</h3>
-                <p className="text-stone-400 text-xs font-bold mt-1 tracking-wider uppercase">Our Visionary Founders</p>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                
-                {/* 成員 1 */}
-                <div className="bg-white rounded-2xl p-6 border border-stone-200 shadow-sm space-y-4">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-12 h-12 rounded-full bg-stone-100 border border-stone-200 flex items-center justify-center font-bold text-[#C67C56] text-sm">土</div>
-                    <div>
-                      <h4 className="text-xs font-black text-stone-950">蔡庭妍 (Crispyen)</h4>
-                      <p className="text-[10px] font-bold text-[#C67C56] tracking-wide mt-0.5">品牌行銷 × 專案統籌 ｜ 核心元素：土</p>
-                    </div>
-                  </div>
-                  <p className="text-stone-500 text-[11px] leading-relaxed">
-                    擁有 CDI / CDA 國際雙生涯發展認證，具備5年以上、超過 850 小時諮詢實務經驗。擅長結合專案管理的邏輯與行銷思維的洞察，理解持證者的孤獨與焦慮，提供具備絕對安全感的「暖暖丘」承載。
-                  </p>
-                </div>
-
-                {/* 成員 2 */}
-                <div className="bg-white rounded-2xl p-6 border border-stone-200 shadow-sm space-y-4">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-12 h-12 rounded-full bg-stone-100 border border-stone-200 flex items-center justify-center font-bold text-emerald-700 text-sm">木</div>
-                    <div>
-                      <h4 className="text-xs font-black text-stone-950">辰杰 (Rake)</h4>
-                      <p className="text-[10px] font-bold text-emerald-700 tracking-wide mt-0.5">外部拓展 × 協會對接 ｜ 核心元素：木</p>
-                    </div>
-                  </div>
-                  <p className="text-stone-500 text-[11px] leading-relaxed">
-                    負責職域所的外部院校深度合作與繼續教育學分單位（如中華生涯發展交流協會）的洽談開拓。以「生長木」的穩固結構，協助建構完整的課程換證學分抵免與B2B校園講座交付。
-                  </p>
-                </div>
-
-                {/* 成員 3 */}
-                <div className="bg-white rounded-2xl p-6 border border-stone-200 shadow-sm space-y-4">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-12 h-12 rounded-full bg-stone-100 border border-stone-200 flex items-center justify-center font-bold text-amber-600 text-sm">光</div>
-                    <div>
-                      <h4 className="text-xs font-black text-stone-950">陳原本 (Ben)</h4>
-                      <p className="text-[10px] font-bold text-amber-600 tracking-wide mt-0.5">商業拓展 × 挑戰挑戰者視角 ｜ 核心元素：光</p>
-                    </div>
-                  </div>
-                  <p className="text-stone-500 text-[11px] leading-relaxed">
-                    目前任職於知名外商企業負責銷售策略，具備教育圈與新創營運資源。在團隊中代表「想入行的新手與市場挑戰者」真實視角，以「流動之光」打破專家的思維盲點，推動商業企劃藍圖的敏捷落地。
-                  </p>
-                </div>
-
-              </div>
-            </section>
-          </div>
-        )}
-
-        {/* ─────────────── PAGE 2: 課程與實戰成長飛輪 ─────────────── */}
-        {currentView === 'courses-flywheel' && (
-          <div className="space-y-16 animate-fade-in">
-            
-            {/* 1. I.O.R 實戰成長飛輪核心看板 */}
-            <section className="bg-gradient-to-br from-stone-950 to-stone-850 rounded-3xl p-8 md:p-12 text-white border border-stone-800 shadow-xl relative overflow-hidden">
-              <div className="absolute top-1/2 right-0 -translate-y-1/2 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl"></div>
-              <div className="max-w-3xl">
-                <span className="text-xs font-bold text-amber-400 tracking-widest uppercase bg-amber-400/10 px-3 py-1 rounded-full">Core Growth Engine</span>
-                <h2 className="text-2xl md:text-3xl font-black mt-4 tracking-tight">I.O.R 實戰成長飛輪：做你一生的支持系統</h2>
-                <p className="text-stone-400 text-xs mt-1 leading-relaxed">
-                  將「助人」變成可變現的終身志業，不能只仰賴短暫的熱情，你需要一套經專專案管理架構打磨的永續運行機制。
-                </p>
-                
-                {/* 飛輪三大階段 */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-10">
-                  
-                  <div className="bg-white/5 border border-white/10 rounded-2xl p-5 space-y-3">
-                    <div className="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-sm">I</div>
-                    <h4 className="text-xs font-black text-white">Input 培力 (Empower)</h4>
-                    <p className="text-stone-400 text-[11px] leading-relaxed">
-                      進階職能學院。補足傳統書本上未涉及的真實職場觀點與冰山下引導秘密。協助持證新手建立個人專屬對話框架。
-                    </p>
-                  </div>
-
-                  <div className="bg-white/5 border border-white/10 rounded-2xl p-5 space-y-3">
-                    <div className="w-9 h-9 rounded-xl bg-[#C67C56]/30 text-[#C67C56] flex items-center justify-center font-bold text-sm">O</div>
-                    <h4 className="text-xs font-black text-white">Output 實踐 (Action)</h4>
-                    <p className="text-stone-400 text-[11px] leading-relaxed">
-                      實戰派案中心。媒合大專院校及對賭型公益/付費個案，提供允許安全試錯的磨練場域，賦予你跨出第一步的勇氣。
-                    </p>
-                  </div>
-
-                  <div className="bg-white/5 border border-white/10 rounded-2xl p-5 space-y-3">
-                    <div className="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-sm">R</div>
-                    <h4 className="text-xs font-black text-white">Review 覆盤 (Review)</h4>
-                    <p className="text-stone-400 text-[11px] leading-relaxed">
-                      專業督導圈。由 CDI 生涯發展導師帶領 1對1 與同儕團體督導，客觀精準打擊盲點，排解冒牌者症候群的內耗孤獨。
-                    </p>
-                  </div>
-
-                </div>
-
-                <div className="mt-8 pt-6 border-t border-white/10 flex flex-wrap items-center justify-between gap-4 text-xs font-bold text-stone-400">
-                  <span className="flex items-center"><CheckCircle className="w-4 h-4 text-amber-400 mr-2" /> 培力、實踐、覆盤循環並行</span>
-                  <span className="flex items-center"><CheckCircle className="w-4 h-4 text-amber-400 mr-2" /> 同步累積換證所必須之 120 CEP 學分</span>
-                </div>
-              </div>
-            </section>
-
-            {/* 2. 近期特色課程與計畫列表 */}
-            <section className="space-y-6">
-              <div className="flex items-end justify-between">
-                <div>
-                  <h3 className="text-xl font-black text-stone-950 tracking-tight">近期開放中計畫 & 企劃</h3>
-                  <p className="text-stone-400 text-xs font-medium">CRAFT hub 第一階段 Prototype 落地驗證項目</p>
-                </div>
-                <span className="text-[10px] font-bold text-stone-400 tracking-wider hidden sm:block">CURRENT DATE: 2026 Q2</span>
-              </div>
-
-              {/* 課程卡片矩陣 */}
-              <div className="space-y-6">
-                {coursesData.map((course, idx) => (
-                  <div key={course.id} className="bg-white rounded-2xl border border-stone-200 shadow-sm p-6 md:p-8 grid grid-cols-1 lg:grid-cols-4 gap-6 hover:shadow-md transition duration-300 relative">
-                    
-                    {/* 左側標籤區 */}
-                    <div className="lg:col-span-1 space-y-2">
-                      <span className="inline-block text-[9px] font-black tracking-wider uppercase bg-stone-900 text-white px-2 py-0.5 rounded">
-                        {course.badge}
-                      </span>
-                      <p className="text-xs font-bold text-[#C67C56] block">{course.tag}</p>
-                      <h4 className="text-sm font-black text-stone-950 leading-snug">{course.title}</h4>
-                      <div className="text-[11px] text-stone-400 font-bold flex items-center mt-2">
-                        <Calendar className="w-3 h-3 mr-1 text-stone-400" /> {course.period}
-                      </div>
-                    </div>
-
-                    {/* 中間詳細內容描述 */}
-                    <div className="lg:col-span-2 space-y-4">
-                      <p className="text-stone-600 text-xs leading-relaxed font-normal">{course.desc}</p>
-                      
-                      <div className="bg-stone-50 rounded-xl p-4 border border-stone-100">
-                        <span className="text-[10px] font-black text-stone-400 block tracking-wider uppercase mb-2">核心包含項目 / 權益</span>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] text-stone-600 font-medium">
-                          {course.features.map((feat, fIdx) => (
-                            <div key={fIdx} className="flex items-center">
-                              <div className="w-1.5 h-1.5 rounded-full bg-[#C67C56] mr-2 shrink-0"></div>
-                              <span>{feat}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* 右側行動與價格對接 */}
-                    <div className="lg:col-span-1 flex flex-col justify-between items-stretch lg:border-l lg:border-stone-100 lg:pl-6 pt-4 lg:pt-0">
-                      <div className="space-y-1">
-                        <span className="text-[10px] font-black text-stone-400 block uppercase">費用機制說明</span>
-                        <p className="text-stone-700 text-xs font-bold leading-normal">{course.price}</p>
-                      </div>
-
-                      <button 
-                        onClick={() => {
-                          if(!activeUid) {
-                            setAuthModal({ isOpen: true, mode: 'register', defaultRole: 'practitioner' });
-                            showToast('加入此計畫請先完成註冊登入', 'warning');
-                          } else {
-                            showToast(`已成功提交【${course.title}】的參與意向申請！`, 'success');
-                          }
-                        }}
-                        className="w-full bg-[#C67C56] hover:bg-[#b06744] text-white text-xs font-bold py-3 px-4 rounded-xl transition mt-4 flex items-center justify-center space-x-1 shadow-sm shadow-[#C67C56]/10"
-                      >
-                        <span>立即申請加入</span>
-                        <ChevronRight className="w-4 h-4" />
-                      </button>
-                    </div>
-
-                  </div>
-                ))}
-              </div>
-            </section>
-          </div>
-        )}
-
-        {/* ─── 原本舊有的主要公共首頁介紹面 ─── */}
-        {currentView === 'home' && (
-          <div className="space-y-12 animate-fade-in">
-            {/* 英雄主視覺看板 */}
-            <section className="bg-white rounded-3xl border border-stone-200 p-8 md:p-12 text-center max-w-4xl mx-auto space-y-6 shadow-sm">
-              <span className="text-xs font-bold tracking-widest text-[#C67C56] uppercase bg-[#C67C56]/10 px-3 py-1 rounded-full">Deepen your craft, Amplify your impact.</span>
-              <h1 className="text-3xl md:text-5xl font-black tracking-tight text-stone-950 max-w-2xl mx-auto leading-tight">
-                厚植專業底蘊，<br/>放大助人者的市場影響力
-              </h1>
-              <p className="text-stone-500 text-xs md:text-sm max-w-xl mx-auto leading-relaxed">
-                考取專業職涯證照只是你的起點，而非接案維護的保證書。
-                <strong>職域所 (CRAFT hub)</strong> 填補從拿到證照到獨立成熟接案的最後一哩路斷層，做你最堅實的後盾支持行會。
-              </p>
-              <div className="pt-4 flex flex-wrap justify-center gap-4">
-                <button onClick={() => handleNavigate('brand-story')} className="bg-stone-950 hover:bg-stone-850 text-white text-xs font-bold px-6 py-3.5 rounded-full transition shadow-md shadow-stone-950/10 flex items-center">
-                  <span>閱讀品牌緣起與團隊</span>
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </button>
-                <button onClick={() => handleNavigate('courses-flywheel')} className="bg-white border border-stone-300 hover:bg-stone-50 text-stone-800 text-xs font-bold px-6 py-3.5 rounded-full transition flex items-center">
-                  <span>查看近期課程與成長飛輪</span>
-                </button>
-              </div>
-            </section>
-          </div>
-        )}
-
-        {/* 舊有其餘路由視角佔位符（功能保持不變） */}
-        {['practitioner-info', 'student-info', 'coach-directory', 'insights', 'faq', 'dashboard-admin', 'dashboard-practitioner', 'dashboard-student'].includes(currentView) && (
-          <div className="bg-white rounded-2xl border border-stone-200 p-12 text-center text-stone-500 text-xs font-bold animate-fade-in shadow-sm space-y-4">
-            <Layers className="w-8 h-8 text-stone-400 mx-auto" />
-            <p>【職域所 (CRAFT hub)】分頁：{currentView} 模組已安全載入。</p>
-            <button onClick={() => handleNavigate('home')} className="text-[#C67C56] underline text-[11px] block mx-auto">回到首頁介紹</button>
-          </div>
-        )}
-
-      </main>
-
-      {/* ==========================================
-          5. 統一身分驗證 Auth 燈箱 Modal
-         ========================================== */}
-      {authModal.isOpen && (
-        <div className="fixed inset-0 bg-stone-950/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4 animate-fade-in">
-          <div className="bg-white rounded-3xl w-full max-w-md p-6 md:p-8 border border-stone-200 shadow-2xl relative">
-            <button 
-              onClick={() => setAuthModal({ ...authModal, isOpen: false })}
-              className="absolute top-5 right-5 text-stone-400 hover:text-stone-700 p-1"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            <div className="text-center space-y-2 mb-6">
-              <h3 className="text-lg font-black text-stone-950">
-                {authModal.mode === 'login' ? '歡迎回到職域所' : '踏上助人者專家蜕變之路'}
-              </h3>
-              <p className="text-stone-400 text-xs">CRAFT hub ── 做你想做的終身助人志業</p>
-            </div>
-
-            {/* 快速模擬一鍵功能 */}
-            <div className="space-y-3">
-              <span className="text-[10px] font-black text-stone-400 tracking-wider uppercase block mb-1">選擇使用者身分進入 (實時Firestore同步)</span>
-              
-              <button 
-                onClick={async () => {
-                  setActiveUid('mock-student-id');
-                  await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'profiles', 'mock-student-id'), {
-                    name: '陳原本 Ben', role: 'student', email: 'ben@crafthub.org'
-                  }, { merge: true });
-                  showToast('成功以學員 (陳原本 Ben) 身分登入同步', 'success');
-                  setAuthModal({ ...authModal, isOpen: false });
-                }}
-                className="w-full bg-stone-50 hover:bg-stone-100 border border-stone-200 rounded-xl p-3 text-left flex items-center justify-between text-xs font-bold transition text-stone-800"
-              >
-                <div className="flex items-center space-x-2">
-                  <User className="w-4 h-4 text-[#C67C56]" />
-                  <span>C端 探路學員/新手諮詢師 (Ben)</span>
-                </div>
-                <ChevronRight className="w-4 h-4 text-stone-400" />
-              </button>
-
-              <button 
-                onClick={async () => {
-                  setActiveUid('mock-practitioner-id');
-                  await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'profiles', 'mock-practitioner-id'), {
-                    name: '蔡庭妍 Crispyen', role: 'practitioner', email: 'crispyen@crafthub.org'
-                  }, { merge: true });
-                  showToast('成功以持證加盟諮詢師 (蔡庭妍) 身分登入同步', 'success');
-                  setAuthModal({ ...authModal, isOpen: false });
-                }}
-                className="w-full bg-stone-50 hover:bg-stone-100 border border-stone-200 rounded-xl p-3 text-left flex items-center justify-between text-xs font-bold transition text-stone-800"
-              >
-                <div className="flex items-center space-x-2">
-                  <Award className="w-4 h-4 text-emerald-700" />
-                  <span>B端 持證加盟諮詢師 (Crispyen)</span>
-                </div>
-                <ChevronRight className="w-4 h-4 text-stone-400" />
-              </button>
-
-              <button 
-                onClick={async () => {
-                  setActiveUid('mock-admin-id');
-                  await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'profiles', 'mock-admin-id'), {
-                    name: '職域所營運部 Rake', role: 'admin', email: 'admin@crafthub.org'
-                  }, { merge: true });
-                  showToast('成功以E端營運主管系統身分登入同步', 'success');
-                  setAuthModal({ ...authModal, isOpen: false });
-                }}
-                className="w-full bg-stone-900 hover:bg-stone-950 text-white rounded-xl p-3 text-left flex items-center justify-between text-xs font-bold transition"
-              >
-                <div className="flex items-center space-x-2">
-                  <Settings className="w-4 h-4 text-amber-400" />
-                  <span>E端 營運主管 / 系統管理端</span>
-                </div>
-                <ChevronRight className="w-4 h-4 text-stone-500" />
-              </button>
-            </div>
-
-            <div className="mt-6 pt-4 border-t border-stone-100 text-center">
-              <button 
-                onClick={() => setAuthModal({ ...authModal, mode: authModal.mode === 'login' ? 'register' : 'login' })}
-                className="text-stone-500 hover:text-stone-800 text-[11px] font-bold underline"
-              >
-                {authModal.mode === 'login' ? '尚未加入？快速建立助人者檔案' : '已有帳號？返回登入'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 📌 底部頁腳 */}
-      <footer className="bg-white border-t border-stone-200 mt-20 py-8 text-center text-[11px] font-bold text-stone-400 tracking-wider">
-        <div className="max-w-7xl mx-auto px-4 space-y-2">
-          <p>© 2026 職域所 (CRAFT hub). Deepen your craft, Amplify your impact. 保留所有權利。</p>
-          <p className="text-stone-300 font-normal">本系統之先導 Prototype 商業落地企劃書符合正規 NCDA PAC / CEP 繼續教育學分認證框架邏輯。</p>
-        </div>
-      </footer>
-    </div>
-  );
-}
+        {/* 後台 */}
+        {currentView === 'dashboard-stu
