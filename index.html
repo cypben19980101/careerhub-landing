@@ -1,1196 +1,715 @@
-import React, { useState, useEffect } from 'react';
-
-// ============================================================================
-// 1. 品牌色彩計畫常數與初始化資料 (大地與光)
-// ============================================================================
-const COLORS = {
-  forestGreen: '#2C4C3B',  // 主色調：深林綠（專業、沉穩、生長、森林）
-  warmClay: '#C67C56',     // 主色調：陶土暖棕（土壤、手作工藝、人的溫度、包容）
-  shimmerGold: '#E8C478',   // 輔助色：微光金（初心、希望、點亮、微光）
-  riceWhite: '#F7F5F0',     // 輔助色：米宣白（畫布、書頁、純粹、留白，避免純黑白）
-};
-
-// 創辦團隊與吉祥物數據
-const TEAM_MEMBERS = [
-  {
-    id: 'tingyan',
-    name: '蔡庭妍 (脆鹽 Crispyen)',
-    title: '共同創辦人 / 品牌行銷 × 專案統籌',
-    cert: 'CDI / CDA 國際雙證照職涯諮詢師 (累積 850+ 小時實務)',
-    element: '「土」元素 (承載與包容)',
-    bio: '從教育新創、海外留學到行銷專案管理，透過大量的嘗試與「刪去法」在變動中篩選出真正的熱情所在。正因為走過彎路，更擅長協助個案在混亂的選項中釐清思緒，將迷惘轉化為明確的下一步。',
-    mascotName: '暖暖丘 (The Mound)',
-    mascotDesc: '一座低矮、寬闊的小土丘。重心極低，給人絕對的安全感。身體線條圓潤、沒有稜角，總是靜靜地待在畫面下方讓夥伴倚靠，或在頭頂長出嫩芽。',
-    mascotColor: '#C67C56'
-  },
-  {
-    id: 'rake',
-    name: '陳辰杰 (Rake)',
-    title: '共同創辦人 / 商業拓展 × 教學賦能',
-    cert: 'CDI 國際生涯發展導師 / 企業職涯策略顧問',
-    element: '「木」元素 (生長與結構)',
-    bio: '歷經企業人資、管理顧問與政府職涯發展計畫，長期專注於人才發展與職涯策略。擅長透過生涯發展方法協助諮詢師看見自身優勢、打磨專屬核心技能，並將助人專業轉化為高價值的市場影響力。',
-    mascotName: '小木木 (Growy Tree)',
-    mascotDesc: '一棵剛發芽的像素風小樹苗，代表發展與蛻變。它的樹幹會隨著團隊每次解鎖新里程碑而微微伸長，身上帶有淡淡的年輪痕跡，象徵專業實務需要時間慢工熟成。',
-    mascotColor: '#2C4C3B'
-  },
-  {
-    id: 'ben',
-    name: '陳原本 (Ben)',
-    title: '共同創辦人 / 營運策略 × 數位科技',
-    cert: '外商銷售策略專家 / 數位產品架構師',
-    element: '「光」元素 (指引與流動)',
-    bio: '具備知名外商銷售策略、實習與跨國數位產品運作背景。在團隊中擔任「挑戰者」與技術轉譯橋樑的角色，致力於消除理論與實務的斷層，打造無邊界的數位共好生態圈與全方位 CRM 系統鏈結。',
-    mascotName: '小微光 (Glimmer)',
-    mascotDesc: '一團沒有固定外形、半透明的飄浮小光球，象徵初心與指引。它會在暗處微微發光，遇到不同卡點的夥伴時會貼心地變換顏色，凝聚起每一位助人工作者的微小光芒。',
-    mascotColor: '#E8C478'
-  }
-];
-
-// 近期課程模擬數據
-const MOCK_COURSES = [
-  { id: 1, title: '諮詢室裡的冰山對話：敘事治療與焦點解決實戰班', instructor: '蔡庭妍 CDI', type: '進階專業課', date: '06/20 開始', credits: '12 CEP', fee: 4500, status: '報名中' },
-  { id: 2, title: '個人品牌 IP 打造：從零建立穩定精準的案源生態圈', instructor: '陳辰杰 CDI', type: '商業賦能課', date: '07/04 開始', credits: '8 CEP', fee: 5200, status: '名額緊張' },
-  { id: 3, title: '【每月賦能小聚】跨界諮詢師的失敗學與倫理覆盤個案沙龍', instructor: '全體導師組', type: '社群小聚', date: '07/18 舉辦', credits: '3 CEP', fee: 600, status: '開放中' },
-  { id: 4, title: '精準職涯牌卡實戰：從心理投射到解碼行動的高互動引導學', instructor: '特邀海外專家', type: '專業工具課', date: '08/02 開始', credits: '6 CEP', fee: 3800, status: '即將截止' }
-];
-
-// 諮詢師在線模擬數據
-const MOCK_PRACTITIONERS = [
-  { id: 'p1', name: '林蔓 (Mandy)', tags: ['人資跨界', '科技業轉職', 'CDA持證'], hours: '120小時', rate: '★ 4.9', bio: '7年知名科技業高階HR，專精履歷盲點精準突破、模擬面試與轉職心理調適。', avatar: '👩‍💼' },
-  { id: 'p2', name: '張宇哲 (Leo)', tags: ['新創行銷', '冒牌者症候群', 'SCPC'], hours: '95小時', rate: '★ 5.0', bio: '從設計師一路跨界到新創總監，擅長陪伴充滿焦慮的求職者長出核心底氣。', avatar: '👨‍💼' },
-  { id: 'p3', name: '脆鹽 Crispyen', tags: ['國際雙證', '教育新創', '海外留學'], hours: '850+小時', rate: '★ 5.0', bio: '職域所共同創辦人，結合專案管理邏輯與行銷思維，溫暖且務實引導下一步。', avatar: '✨' }
-];
-
-export default function App() {
-  // ============================================================================
-  // 2. 系統全局狀態管理 (免登入、學員、諮詢師、營運總管四端融合)
-  // ============================================================================
-  const [activeTab, setActiveTab] = useState('home'); // 頁籤控制
-  const [currentUser, setCurrentUser] = useState(null); // 當前登入用戶狀態
-  const [authMode, setAuthMode] = useState(null); // 'login' | 'register' | null
-  const [registerRole, setRegisterRole] = useState('learner'); // 'learner' | 'practitioner'
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>職域所 CRAFT hub ｜ 讓助人者的專業微光，匯聚成塔</title>
   
-  // 模擬數據庫狀態 (保存在記憶體中，防止Firebase未定義崩潰)
-  const [practitionersList, setPractitionersList] = useState(MOCK_PRACTITIONERS);
-  const [userInbox, setUserInbox] = useState([]); // 實時系統信箱
-  const [crmMessages, setCrmMessages] = useState([
-    { sender: 'system', text: '🌱 嗨！歡迎來到職域所。我們是一群抱持職人精神的諮詢師。不論你是想探索生涯的卡點，或是剛拿到證照正經歷斷層焦慮的助人者，歡迎隨時跟我們聊聊！', time: '剛剛' }
-  ]);
-  const [isCrmOpen, setIsCrmOpen] = useState(false);
-  const [crmInput, setCrmInput] = useState('');
-  const [anonymousHistory, setAnonymousHistory] = useState(['訪問首頁']); // CRM靈魂綁定前世軌跡
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            forestGreen: '#2C4C3B',  // 深林綠：專業的厚度、沉穩、生長
+            warmClay: '#C67C56',     // 陶土暖棕：土壤、手作工藝、人的溫度
+            shimmerGold: '#E8C478',   // 微光金：初心、希望、點亮、微光
+            riceWhite: '#F7F5F0',     // 米宣白：純粹、留白、暖灰紙底色
+          },
+          fontFamily: {
+            serif: ['Noto Serif TC', 'Georgia', 'serif'],
+            sans: ['Noto Sans TC', 'Inter', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600;900&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+  
+  <style>
+    body {
+      background-color: #F7F5F0;
+    }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes scaleUp { from { opacity: 0; transform: scale(0.97); } to { opacity: 1; transform: scale(1); } }
+    .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
+    .animate-scale-up { animation: scaleUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+  </style>
+</head>
+<body class="font-sans antialiased text-forestGreen selection:bg-shimmerGold/30">
 
-  // 首頁卡點急速解碼器狀態
-  const [quizTrack, setQuizTrack] = useState(null); // 'explorer' (探索者) | 'practitioner' (諮詢工作者)
-  const [quizStep, setQuizStep] = useState(0);
-  const [quizAnswers, setQuizAnswers] = useState([]);
-  const [quizResult, setQuizResult] = useState(null);
+  <div id="root"></div>
 
-  // CEP學分缺口計算機狀態
-  const [cepCourses, setCepCourses] = useState(24);
-  const [cepSupervision, setCepSupervision] = useState(12);
-  const [cepConsultations, setCepConsultations] = useState(15);
+  <script type="text/babel">
+    const { useState, useEffect } = React;
 
-  // 微光陪跑計畫退還款保證金計算機狀態
-  const [taskProfile, setTaskProfile] = useState(false);
-  const [taskCaseStudy, setTaskCaseStudy] = useState(false);
-  const [taskSocialProof, setTaskSocialProof] = useState(false);
-  const [taskVideo, setTaskVideo] = useState(false);
+    // 團隊初始化核心數據
+    const TEAM_MEMBERS = [
+      {
+        id: 'tingyan',
+        name: '蔡庭妍 (脆鹽 Crispyen)',
+        title: '共同創辦人 / 品牌行銷 × 專案統籌',
+        cert: 'CDI / CDA 國際雙證照職涯諮詢師 (累積 850+ 小時實務)',
+        element: '「土」元素 (承載與包容)',
+        bio: '從教育新創、海外留學到行銷專案管理，透過大量的嘗試與「刪去法」在變動中篩選出真正的熱情所在。正因為走過彎路，更擅長協助個案在混亂的選項中釐清思緒，將迷惘轉化為明確的下一步。',
+        mascotName: '暖暖丘 (The Mound)',
+        mascotDesc: '一座低矮、寬闊的小土丘。重心極低，給人絕對的安全感。身體線條圓潤、沒有稜角，總是靜靜地待在畫面下方讓夥伴倚靠，或在頭頂長出嫩芽。',
+        mascotColor: '#C67C56'
+      },
+      {
+        id: 'rake',
+        name: '陳辰杰 (Rake)',
+        title: '共同創辦人 / 商業拓展 × 教學賦能',
+        cert: 'CDI 國際生涯發展導師 / 企業職涯策略顧問',
+        element: '「木」元素 (生長與結構)',
+        bio: '歷經企業人資、管理顧問與政府職涯發展計畫，長期專注於人才發展與職涯策略。擅長透過生涯發展方法協助諮詢師看見自身優勢、打磨專屬核心技能，並將助人專業轉化為高價值的市場影響力。',
+        mascotName: '小木木 (Growy Tree)',
+        mascotDesc: '一棵剛發芽的像素風小樹苗，代表發展與蛻變。它的樹幹會隨著團隊每次解鎖新里程碑而微微伸長，身上帶有淡淡的年輪痕跡，象徵專業實務需要時間慢工熟成。',
+        mascotColor: '#2C4C3B'
+      },
+      {
+        id: 'ben',
+        name: '陳原本 (Ben)',
+        title: '共同創辦人 / 營運策略 × 數位科技',
+        cert: '外商銷售策略專家 / 數位產品架構師',
+        element: '「光」元素 (指引與流動)',
+        bio: '具備知名外商銷售策略、實習與跨國數位產品運作背景。在團隊中擔任「挑戰者」與技術轉譯橋樑的角色，致力於消除理論與實務的斷層，打造無邊界的數位共好生態圈與全方位 CRM 系統鏈結。',
+        mascotName: '小微光 (Glimmer)',
+        mascotDesc: '一團沒有固定外形、半透明的飄浮小光球，象徵初心與指引。它會在暗處微微發光，遇到不同卡點的夥伴時會貼心地變換顏色，凝聚起每一位助人工作者的微小光芒。',
+        mascotColor: '#E8C478'
+      }
+    ];
 
-  // 營運端控制審核列表
-  const [pendingApprovals, setPendingApprovals] = useState([
-    { email: 'test.coach@crafthub.com', name: '王大同', cert: 'CDA 證照持證1年', applyTime: '2026-06-02' }
-  ]);
+    const MOCK_COURSES = [
+      { id: 1, title: '諮詢室裡的冰山對話：敘事治療與焦點解決實戰班', instructor: '蔡庭妍 CDI', type: '進階專業課', date: '06/20 開始', credits: '12 CEP', fee: 4500 },
+      { id: 2, title: '個人品牌 IP 打造：從零建立穩定精準的案源生態圈', instructor: '陳辰杰 CDI', type: '商業賦能課', date: '07/04 開始', credits: '8 CEP', fee: 5200 },
+      { id: 3, title: '【每月賦能小聚】跨界諮詢師的失敗學與倫理覆盤個案沙龍', instructor: '全體導師組', type: '社群小聚', date: '07/18 舉辦', credits: '3 CEP', fee: 600 },
+      { id: 4, title: '精準職涯牌卡實戰：從心理投射到解碼行動的高互動引引导學', instructor: '特邀海外專家', type: '專業工具課', date: '08/02 開始', credits: '6 CEP', fee: 3800 }
+    ];
 
-  // 彈窗狀態控制
-  const [bookingModal, setBookingModal] = useState(null);
-  const [courseRegModal, setCourseRegModal] = useState(null);
+    const MOCK_PRACTITIONERS = [
+      { id: 'p1', name: '林蔓 (Mandy)', tags: ['人資跨界', '科技業轉職', 'CDA持證'], hours: '120小時', rate: '★ 4.9', bio: '7年知名科技業高階HR，專精履歷盲點精準突破、模擬面試與轉職心理調適。', avatar: '👩‍💼' },
+      { id: 'p2', name: '張宇哲 (Leo)', tags: ['新創行銷', '冒牌者症候群', 'SCPC'], hours: '95小時', rate: '★ 5.0', bio: '從設計師一路跨界到新創總監，擅長陪伴充滿焦慮的求職者長出核心底氣。', avatar: '👨‍💼' },
+      { id: 'p3', name: '脆鹽 Crispyen', tags: ['國際雙證', '教育新創', '海外留學'], hours: '850+小時', rate: '★ 5.0', bio: '職域所共同創辦人，結合專案管理邏輯與行銷思維，溫暖且務實引導下一步。', avatar: '✨' }
+    ];
 
-  // 記錄軌跡
-  useEffect(() => {
-    setAnonymousHistory(prev => [...prev, `瀏覽頁面: ${activeTab}`]);
-  }, [activeTab]);
+    function App() {
+      // 頁面與四端狀態管理
+      const [activeTab, setActiveTab] = useState('home');
+      const [currentUser, setCurrentUser] = useState(null);
+      const [authMode, setAuthMode] = useState(null); 
+      const [registerRole, setRegisterRole] = useState('learner');
+      
+      const [practitionersList, setPractitionersList] = useState(MOCK_PRACTITIONERS);
+      const [userInbox, setUserInbox] = useState([]); 
+      const [crmMessages, setCrmMessages] = useState([
+        { sender: 'system', text: '🌱 嗨！歡迎來到職域所。我們是一群抱持職人精神的諮詢師。不論你是想探索生涯的卡點，或是剛拿到證照正經歷斷層焦慮的助人者，歡迎隨時跟我們聊聊！', time: '剛剛' }
+      ]);
+      const [isCrmOpen, setIsCrmOpen] = useState(false);
+      const [crmInput, setCrmInput] = useState('');
+      const [anonymousHistory, setAnonymousHistory] = useState(['訪問首頁']); 
 
-  // 輔助函式：發送虛擬郵件
-  const sendVirtualEmail = (to, subject, contentHTML) => {
-    const newEmail = {
-      id: Date.now(),
-      to,
-      subject,
-      content: contentHTML,
-      time: new Date().toLocaleTimeString()
-    };
-    setUserInbox(prev => [newEmail, ...prev]);
-  };
+      // 3層急速解碼器狀態
+      const [quizTrack, setQuizTrack] = useState(null);
+      const [quizStep, setQuizStep] = useState(0);
+      const [quizAnswers, setQuizAnswers] = useState([]);
+      const [quizResult, setQuizResult] = useState(null);
 
-  // ============================================================================
-  // 3. 核心邏輯處理：登入、註冊、審核、問答
-  // ============================================================================
-  const handleMockLogin = (email, password, isGoogle = false) => {
-    if (isGoogle) {
-      // 模擬 Google 一鍵登入
-      const mockUser = {
-        email: 'google.user@gmail.com',
-        name: '微光探索者',
-        role: 'learner',
-        uid: 'google-uid-12345'
+      // 續證學分缺口計算機狀態
+      const [cepCourses, setCepCourses] = useState(24);
+      const [cepSupervision, setCepSupervision] = useState(12);
+      const [cepConsultations, setCepConsultations] = useState(15);
+
+      // 微光陪跑保證金返還計量狀態
+      const [taskProfile, setTaskProfile] = useState(false);
+      const [taskCaseStudy, setTaskCaseStudy] = useState(false);
+      const [taskSocialProof, setTaskSocialProof] = useState(false);
+      const [taskVideo, setTaskVideo] = useState(false);
+
+      const [pendingApprovals, setPendingApprovals] = useState([
+        { email: 'test.coach@crafthub.com', name: '王大同', cert: 'CDA 證照持證1年', applyTime: '2026-06-02' }
+      ]);
+
+      const [bookingModal, setBookingModal] = useState(null);
+      const [courseRegModal, setCourseRegModal] = useState(null);
+
+      useEffect(() => {
+        setAnonymousHistory(prev => [...prev, `切換分頁: ${activeTab}`]);
+      }, [activeTab]);
+
+      const sendVirtualEmail = (to, subject, contentHTML) => {
+        setUserInbox(prev => [{
+          id: Date.now(), to, subject, content: contentHTML, time: new Date().toLocaleTimeString()
+        }, ...prev]);
       };
-      setCurrentUser(mockUser);
-      sendVirtualEmail(mockUser.email, '【職域所 CRAFT hub】Google 帳戶安全鏈結成功通知', `
-        <h3>歡迎光臨職域所！</h3>
-        <p>親愛的 ${mockUser.name} 您好：</p>
-        <p>您已成功透過 Google 帳戶安全登入職域所全效型平台。您的匿名前世瀏覽軌跡已與此帳號進行「靈魂綁定」，我們將為您持續保留完整的客製化職涯探索紀錄與對話脈絡。</p>
-        <p style="color: #2C4C3B; font-weight: bold;">讓助人者的專業微光，匯聚成塔。</p>
-      `);
-      setAuthMode(null);
-      return;
-    }
 
-    if (email === 'admin@crafthub.com') {
-      setCurrentUser({ email, name: '營運總管 Ben', role: 'admin', uid: 'admin-000' });
-      setAuthMode(null);
-      return;
-    }
-
-    // 模擬一般常規登入
-    if (email.includes('coach')) {
-      setCurrentUser({ email, name: '現役職人諮詢師', role: 'practitioner', status: 'approved', uid: 'p-user-777' });
-    } else {
-      setCurrentUser({ email, name: '常規成員', role: 'learner', uid: 'l-user-111' });
-    }
-    setAuthMode(null);
-  };
-
-  const handleMockRegister = (name, email, password) => {
-    if (registerRole === 'learner') {
-      const newUser = { email, name, role: 'learner', uid: 'u-' + Date.now() };
-      setCurrentUser(newUser);
-      sendVirtualEmail(email, '【職域所 CRAFT hub】帳號註冊成功歡迎信', `
-        <h3>歡迎來到職域所共好生態圈！</h3>
-        <p>親愛的 ${name} 夥伴：</p>
-        <p>很高興看見你邁出這一步。無論你是正處於職涯起步迷惘、停滯瓶頸，或是熱愛生涯探索的夥伴，職域所的大門永遠為你敞開。</p>
-        <p><strong>你接下來可以：</strong> 參與高互動性讀書會、查看專業持證諮詢師名冊進行 1 對 1 深度對話預約。</p>
-        <p>祝 探索順心<br/>職域所團隊 敬上</p>
-      `);
-      setAuthMode(null);
-    } else {
-      // 諮詢師註冊流程 -> 進入待審核大廳
-      const pendingUser = { email, name, role: 'practitioner', status: 'pending', uid: 'p-' + Date.now() };
-      setCurrentUser(pendingUser);
-      setPendingApprovals(prev => [...prev, { email, name, cert: '申請持證諮詢師資格', applyTime: new Date().toLocaleDateString() }]);
-      
-      sendVirtualEmail(email, '【職域所】註冊成功，諮詢師執業資格專案審核中', `
-        <h3>收到您的職人入所申請！</h3>
-        <p>持證夥伴 ${name} 您好：</p>
-        <p>我們已收到您的加入申請。由於職域所定位為<strong>「專業行會與實戰深耕社群」</strong>，為了維護個案品質與實戰梯次名額，所有 B 端持證諮詢師皆需由後台營運主管進行人工資歷覆盤與面談核准。</p>
-        <p>我們將於 1-2 個工作天內完成審核並寄發正式開通信。在此期間，您可以於待命大廳隨時關注進度。若您不小心選錯身分，可使用大廳下方的『時空倒流救援鈕』進行身分重設。</p>
-      `);
-      setAuthMode(null);
-    }
-  };
-
-  // 營運主管批准諮詢師
-  const approvePractitioner = (emailToApprove) => {
-    setPendingApprovals(prev => prev.filter(item => item.email !== emailToApprove));
-    sendVirtualEmail(emailToApprove, '🎉【職域所 CRAFT hub】恭喜！您的持證諮詢師執業審核已通過', `
-      <h3>恭喜您通過入所核准，開啟屬於你的諮詢職人志業！</h3>
-      <p>親愛的諮詢師夥伴您好：</p>
-      <p>經過營運團隊的深度評估，我們非常榮幸核准您正式加盟職域所前台專家名冊！</p>
-      <p>您的 B 端獨立後台儀表板已正式解鎖，您現在可以登入並編輯您的一站式 IP 履歷管理看板、串接 CEP 繼續教育學分自動統計儀表板、並參與【微光孵化】實戰陪跑計畫之派案媒合對接。讓我們抱持對專業生命的敬畏心，一起卓越前行！</p>
-    `);
-    
-    // 如果當前登入者剛好是該待審諮詢師，實時更新其狀態
-    if (currentUser && currentUser.email === emailToApprove) {
-      setCurrentUser(prev => ({ ...prev, status: 'approved' }));
-    }
-
-    // 將其加入在線名冊
-    setPractitionersList(prev => [
-      ...prev,
-      { id: 'p-' + Date.now(), name: emailToApprove.split('@')[0], tags: ['專業換證中', '考核通過'], hours: '0小時', rate: '★ 5.0', bio: '職域所核准精銳諮詢師，深具專業底蘊。', avatar: '✨' }
-    ]);
-  };
-
-  // 時空倒流救援鈕：重設身分回到學員
-  const handleTimeTravelRescue = () => {
-    if (currentUser) {
-      const rescuedUser = { ...currentUser, role: 'learner', status: undefined };
-      setCurrentUser(rescuedUser);
-      sendVirtualEmail(currentUser.email, '【救援成功】您的註冊狀態已重設為常規學員身分', `
-        <p>我們已收到您的一鍵救援指令。您的身分已順利從諮詢師待審核佇列退出，並切換為標準學員身分。您現在可以直接參與前台所有互動測驗與近期課程報名。</p>
-      `);
-    }
-  };
-
-  // 處理 CRM 送出訊息
-  const handleCrmSend = (e) => {
-    e.preventDefault();
-    if (!crmInput.trim()) return;
-    
-    const userMsg = { sender: 'user', text: crmInput, time: '剛剛' };
-    setCrmMessages(prev => [...prev, userMsg]);
-    const currentInput = crmInput;
-    setCrmInput('');
-
-    // 模擬 AI 或是真人智慧回覆
-    setTimeout(() => {
-      let replyText = "收到您的訊息！我們的核心創辦團隊（庭妍、辰杰、Ben）已收到您的諮詢提問，會將您的前世瀏覽軌跡一併帶入。請問您目前最想了解的是微光孵化陪跑計畫，還是想預約 1 對 1 的諮詢呢？";
-      if (currentInput.includes('學分') || currentInput.includes('換證')) {
-        replyText = "換證學分是大家共同的痛點！職域所的課程與同儕督導皆可對接繼續教育學分（CEP）缺口認證。您可以利用計畫介紹頁面的學分計算機，點擊右下方註冊按鈕，系統會將您的對話直接與新帳戶靈魂綁定！";
-      } else if (currentInput.includes('費用') || currentInput.includes('保證金')) {
-        replyText = "我們的微光陪跑計畫極具市場競爭力！採取保證金機制（先付 $6,000，完成自我介紹、個案匿名故事、公開社群心得等產出任務後，直接退還 $4,000 現金，實際行政成本僅 $2,000 元）。這能極大增加您的實戰轉化率！";
-      }
-      setCrmMessages(prev => [...prev, { sender: 'system', text: replyText, time: '剛剛' }]);
-    }, 800);
-  };
-
-  // ============================================================================
-  // 4. 卡點解碼器題目設定 (5題 雙軌硬核結構)
-  // ============================================================================
-  const START_QUIZ = (track) => {
-    setQuizTrack(track);
-    setQuizStep(1);
-    setQuizAnswers([]);
-    setQuizResult(null);
-  };
-
-  const NEXT_QUIZ_STEP = (answerWeight) => {
-    const updatedAnswers = [...quizAnswers, answerWeight];
-    setQuizAnswers(updatedAnswers);
-
-    if (quizStep < 5) {
-      setQuizStep(quizStep + 1);
-    } else {
-      // 計算結果
-      if (quizTrack === 'explorer') {
-        if (updatedAnswers.filter(a => a === 'A').length >= 3) {
-          setQuizResult({
-            title: '【定位模糊的起步遊俠】',
-            desc: '你在很多領域都有不錯的才華，但在面對職涯選擇時，容易落入過度發散的毛線球困境。你不需要盲目去上包裝精緻的雞湯課，而是需要透過行銷思維的「刪去法」與專案管理邏輯，從混亂選項中提煉出精準的第一步。',
-            cta: '建議立即到「諮詢師在線」預約蔡庭妍老師或優秀夥伴進行 1對1 的 50分鐘 職引者導航對話。'
-          });
-        } else {
-          setQuizResult({
-            title: '【高內耗的深海潛水員】',
-            desc: '你對現狀有極高的警覺與危機感，渴望突破現有時間換錢的瓶頸，但卡在害怕失敗的糾結中。你需要的不是更多的證照背書，而是直接進入允許試錯的安全場域，透過行動去打破冒牌者症候群的內耗。',
-            cta: '歡迎點選導航列的「專業進階課」，從實務牌卡引導或敘事冰山對話開始，把空泛焦慮轉化為可落地執行的方法論。'
-          });
+      const handleMockLogin = (email, password, isGoogle = false) => {
+        if (isGoogle) {
+          const mockUser = { email: 'google.user@gmail.com', name: '微光探索者', role: 'learner', uid: 'g-123' };
+          setCurrentUser(mockUser);
+          sendVirtualEmail(mockUser.email, '【職域所 CRAFT hub】Google 帳戶安全鏈結成功通知', `
+            <h3>歡迎光臨職域所！</h3>
+            <p>親愛的 ${mockUser.name} 您好：</p>
+            <p>您已成功透過 Google 帳戶安全登入職域所全效型平台。您的匿名前世瀏覽軌跡已與此帳號進行「靈魂綁定」，我們將為您持續保留完整的客製化職涯探索紀錄與對話脈絡。</p>
+          `);
+          setAuthMode(null);
+          return;
         }
-      } else {
-        // 諮詢工作者 B端
-        if (updatedAnswers.filter(a => a === 'A').length >= 3) {
-          setQuizResult({
-            title: '【持證新手之死亡之谷卡關者】',
-            desc: '你非常有同理心，對生命充滿敬畏。但拿到證照後面對真實個案，內心總是虛怯、卡在「懂理論卻不敢收費接案」的斷層。你目前最急需的是安全的個案淬煉、資深導師的督導覆盤以及一群懂你的同儕防迷航支持網。',
-            cta: '【微光孵化】實戰陪跑計畫就是為你量身打造的！建議立即拉到下方查看保證金任務，或於 6/19 準時參加線上說明會。'
-          });
-        } else {
-          setQuizResult({
-            title: '【資格到期前的 CEP 學分焦慮行者】',
-            desc: '三年 120 學分的到期期限正在逐漸逼近！你並非不專業，而是零散的培訓資訊讓你感到疲憊，不知如何最穩健、最省時地累積 NCDA / PAC 認列資格。',
-            cta: '立刻點擊上方導航列「微光實戰陪跑計畫」，裡面內置了學分缺口動態計算機，加入陪跑或團體督導可以直接穩定取得 30+ 以上的 CEP 點數！'
-          });
+
+        if (email === 'admin@crafthub.com') {
+          setCurrentUser({ email, name: '營運總管 Ben', role: 'admin', uid: 'admin-000' });
+          setAuthMode(null);
+          return;
         }
-      }
-      setQuizStep(0);
-    }
-  };
 
-  const MOCK_QUIZ_QUESTIONS = {
-    explorer: [
-      { q: "當你面對下一個職涯十字路口，你最常浮現的內心獨白是？", options: [{ t: "不知道自己要什麼，害怕選錯走彎路", w: "A" }, { t: "知道有些方向，但本業跟副業精疲力竭，卡在時間換錢陷阱", w: "B" }] },
-      { q: "如果要把你目前的迷惘狀態具象化，它更像哪種情境？", options: [{ t: "滿腦子的毛線球，理不出頭緒與明確下一步", w: "A" }, { t: "一座快要熄滅的微光，缺乏長遠的影響力擴散藍圖", w: "B" }] },
-      { q: "你過往面對迷惘最常見的處理方式是？", options: [{ t: "瘋狂收集課程與考證照，尋求外部安全感", w: "A" }, { t: "自己默默忍受與內耗，陷入日常常規的消磨", w: "B" }] },
-      { q: "若此時有一位資深職人夥伴坐在你對面，你希望他具備什麼風格？", options: [{ t: "幫你用專案管理邏輯釐清混亂、給出務實行動線索", w: "A" }, { t: "給予深度的教練式引導、不講大道理只講生存底氣", w: "B" }] },
-      { q: "你認為一場真正有價值的諮詢，最核心的收穫應該是？", options: [{ t: "一份清晰的下一步策略實戰地圖", w: "A" }, { t: "看見自己冰山下的優勢本質，與承接生命的能量", w: "B" }] }
-    ],
-    practitioner: [
-      { q: "拿到諮詢相關專業證照後，你目前執業上面臨最大的痛點是？", options: [{ t: "懂理論工具，但面對真實個案卡情緒或不敢收費", w: "A" }, { t: "缺乏穩定的曝光渠道與獲客案源，不知道去哪找個案", w: "B" }] },
-      { q: "當您在諮詢室遇到棘手或卡關的個案時，您的真實狀態是？", options: [{ t: "感到孤單、自我懷疑（冒牌者症候群發作），無前輩討論", w: "A" }, { t: "知道怎麼處理，但覺得諮詢模式太耗時間，想開發多元進階課", w: "B" }] },
-      { q: "對於「三年 120 學分」的繼續教育（CEP）續證規範，您的感受是？", options: [{ t: "非常焦慮，覺得取得管道不清楚且流程繁瑣耗時", w: "A" }, { t: "還算了解，但希望能有一站式自動統計學分的儀表板", w: "B" }] },
-      { q: "你認為要從持證新手蛻變為能獨當一面的專家，最缺的是什麼？", options: [{ t: "允許試錯的安全場域，加上資深導師的 1對1 督導覆盤", w: "A" }, { t: "個人 IP 個人品牌商業赋能與大專院校、校園提案的連結", w: "B" }] },
-      { q: "職域所倡導「諮詢是需要時間熟成的工藝」，這句話對你的觸動是？", options: [{ t: "直擊心靈，我對承接生命有敬畏心，不想追求速成過度包裝", w: "A" }, { t: "認同，我希望加入聯合事務所，告別單打獨鬥的生態圈", w: "B" }] }
-    ]
-  };
+        if (email.includes('coach')) {
+          setCurrentUser({ email, name: '現役職人諮詢師', role: 'practitioner', status: 'approved', uid: 'p-777' });
+        } else {
+          setCurrentUser({ email, name: '常規成員', role: 'learner', uid: 'l-111' });
+        }
+        setAuthMode(null);
+      };
 
-  // 計算 CEP 總分
-  const totalCepCalculated = parseInt(cepCourses || 0) + parseInt(cepSupervision || 0) * 2 + parseInt(cepConsultations || 0) * 1.5;
+      const handleMockRegister = (name, email, password) => {
+        if (registerRole === 'learner') {
+          setCurrentUser({ email, name, role: 'learner', uid: 'u-' + Date.now() });
+          sendVirtualEmail(email, '【職域所 CRAFT hub】帳號註冊成功歡迎信', `<h3>歡迎來到職域所共好生態圈！</h3><p>親愛的 ${name} 夥伴：很高興看見你邁出這一步。</p>`);
+        } else {
+          setCurrentUser({ email, name, role: 'practitioner', status: 'pending', uid: 'p-' + Date.now() });
+          setPendingApprovals(prev => [...prev, { email, name, cert: '申請持證諮詢師資格', applyTime: new Date().toLocaleDateString() }]);
+          sendVirtualEmail(email, '【職域所】註冊成功，諮詢師執業資格專案審核中', `<h3>收到您的職人入所申請！</h3><p>持證夥伴 ${name} 您好：我們正在為您人工覆盤覆核資格。</p>`);
+        }
+        setAuthMode(null);
+      };
 
-  return (
-    <div className="min-h-screen font-sans antialiased text-[#2C4C3B] selection:bg-[#E8C478]/30" style={{ backgroundColor: COLORS.riceWhite }}>
-      
-      {/* ============================================================================
-          頂部Persistent置頂固定的導航列 Header Navbar
-         ============================================================================ */}
-      <header className="sticky top-0 z-50 w-full border-b border-[#2C4C3B]/10 backdrop-blur-md bg-[#F7F5F0]/90">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+      const approvePractitioner = (emailToApprove) => {
+        setPendingApprovals(prev => prev.filter(item => item.email !== emailToApprove));
+        sendVirtualEmail(emailToApprove, '🎉【職域所 CRAFT hub】恭喜！您的持證諮詢師執業審核已通過', `<p>您的 B 端獨立後台儀表板已正式解鎖，您現在可以正式加盟前台專家名冊！</p>`);
+        if (currentUser && currentUser.email === emailToApprove) {
+          setCurrentUser(prev => ({ ...prev, status: 'approved' }));
+        }
+        setPractitionersList(prev => [
+          ...prev,
+          { id: 'p-' + Date.now(), name: emailToApprove.split('@')[0], tags: ['考核通過', '專業更換中'], hours: '0小時', rate: '★ 5.0', bio: '職域所核准精銳諮詢師，深具專業底蘊。', avatar: '✨' }
+        ]);
+      };
+
+      const handleCrmSend = (e) => {
+        e.preventDefault();
+        if (!crmInput.trim()) return;
+        setCrmMessages(prev => [...prev, { sender: 'user', text: crmInput, time: '剛剛' }]);
+        const txt = crmInput;
+        setCrmInput('');
+
+        setTimeout(() => {
+          let reply = "收到您的訊息！我們的核心創辦團隊（庭妍、Rake、Ben）已收到您的諮詢提問，會將您的前世瀏覽軌跡一併帶入。請問您目前最想了解的是微光孵化陪跑計畫，還是想預約 1 對 1 的諮詢呢？";
+          if (txt.includes('學分') || txt.includes('換證')) reply = "換證學分是大家共同的痛點！職域所的課程與同儕督導皆可對接繼續教育學分（CEP）缺口認證。你可以利用計畫介紹頁面的學分計算機預算盲點！";
+          setCrmMessages(prev => [...prev, { sender: 'system', text: reply, time: '剛剛' }]);
+        }, 600);
+      };
+
+      const START_QUIZ = (track) => {
+        setQuizTrack(track); setQuizStep(1); setQuizAnswers([]); setQuizResult(null);
+      };
+
+      const NEXT_QUIZ_STEP = (weight) => {
+        const updated = [...quizAnswers, weight];
+        setQuizAnswers(updated);
+        if (quizStep < 5) {
+          setQuizStep(quizStep + 1);
+        } else {
+          if (quizTrack === 'explorer') {
+            setQuizResult({
+              title: updated.filter(a => a==='A').length >= 3 ? '【定位模糊的起步遊俠】' : '【高內耗的深海潛水員】',
+              desc: '你在生涯發展中正面臨特定卡點。不需要盲目去上包裝精緻的雞湯課，你需要的是透過行銷思維的「刪去法」與專案管理邏輯提煉出精準的第一步。',
+              cta: '建議立即到「諮詢師在線」頁面預約 1對1 的 50分鐘 職引者導航對話。'
+            });
+          } else {
+            setQuizResult({
+              title: updated.filter(a => a==='A').length >= 3 ? '【持證新手之死亡之谷卡關者】' : '【資格到期前的 CEP 學分焦慮行者】',
+              desc: '拿到證照上面對真實個案，容易卡在懂理論卻不敢接案、不敢收費的斷層。你目前最急需的是安全的個案淬煉、資深導師的督導與同儕支持網。',
+              cta: '【微光孵化】實戰陪跑計畫就是為你量身打造的！建議立即拉到下方查看保證金任務。'
+            });
+          }
+          setQuizStep(0);
+        }
+      };
+
+      const MOCK_QUIZ_QUESTIONS = {
+        explorer: [
+          { q: "當你面對下一個職涯十字路口，你最常浮現的內心獨白是？", options: [{ t: "不知道自己要什麼，害怕選錯走彎路", w: "A" }, { t: "知道有些方向，但本業跟副業精疲力竭，卡在時間換錢陷阱", w: "B" }] },
+          { q: "如果要把你目前的迷惘狀態具象化，它更像哪種情境？", options: [{ t: "滿腦子的毛線球，理不出頭緒與明確下一步", w: "A" }, { t: "一座快要熄滅的微光，缺乏長遠的影響力擴散藍圖", w: "B" }] },
+          { q: "你過往面對迷惘最常見的處理方式是？", options: [{ t: "瘋狂收集課程與考證照，尋求外部安全感", w: "A" }, { t: "自己默默忍受與內耗，陷入日常常規的消磨", w: "B" }] },
+          { q: "若此時有一位資深職人夥伴坐在你對面，你希望他具備什麼風格？", options: [{ t: "幫你用專案管理邏輯釐清混亂、給出務實行動線索", w: "A" }, { t: "給予深度的教練式引導、不講大道理只講生存底氣", w: "B" }] },
+          { q: "你認為一場真正有價值的諮詢，最核心的收穫應該是？", options: [{ t: "一份清晰的下一步策略實戰地圖", w: "A" }, { t: "看見自己冰山下的優勢本質，與承接生命的能量", w: "B" }] }
+        ],
+        practitioner: [
+          { q: "拿到諮詢相關專業證照後，你目前執業上面臨最大的痛點是？", options: [{ t: "懂理論工具，但面對真實個案卡情緒或不敢收費", w: "A" }, { t: "缺乏穩定的曝光渠道與獲客案源，不知道去哪找個案", w: "B" }] },
+          { q: "當您在諮詢室遇到棘手或卡關的個案時，您的真實狀態是？", options: [{ t: "感到孤單、自我懷疑（冒牌者症候群發作），無前輩討論", w: "A" }, { t: "知道怎麼處理，但覺得諮詢模式太耗時間，想開發多元進階課", w: "B" }] },
+          { q: "對於「三年 120 學分」的繼續教育（CEP）續證規範，您的感受是？", options: [{ t: "非常焦慮，覺得取得管道不清楚且流程繁瑣耗時", w: "A" }, { t: "還算了解，但希望能有一站式自動統計學分的儀表板", w: "B" }] },
+          { q: "你認為要從持證新手蛻變為能獨當一面的專家，最缺的是什麼？", options: [{ t: "允許試錯的安全場域，加上資深導師的 1對1 督導覆盤", w: "A" }, { t: "個人 IP 個人品牌商業賦能與大專院校、校園提案的連結", w: "B" }] },
+          { q: "職域所倡導「諮詢是需要時間熟成的工藝」，這句話對你的觸動是？", options: [{ t: "直擊心靈，我對承接生命有敬畏心，不想追求速成過度包裝", w: "A" }, { t: "認同，我希望加入聯合事務所，告別單打獨鬥的生態圈", w: "B" }] }
+        ]
+      };
+
+      const totalCep = parseInt(cepCourses||0) + parseInt(cepSupervision||0)*2 + parseInt(cepConsultations||0)*1.5;
+
+      return (
+        <div className="min-h-screen flex flex-col justify-between">
           
-          {/* Logo 區塊 */}
-          <div className="flex items-center space-x-3 cursor-pointer" onClick={() => setActiveTab('home')}>
-            <div className="h-11 w-11 rounded-xl bg-[#2C4C3B] flex items-center justify-center p-2 border border-[#E8C478]/40 shadow-sm transition-transform hover:scale-105">
-              {/* 微光聚塔向量圖 */}
-              <svg viewBox="0 0 100 100" fill="none" className="w-full h-full">
-                <path d="M50 15 L25 80 L75 80 Z" stroke="#E8C478" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
-                <circle cx="50" cy="40" r="8" fill="#C67C56" />
-                <circle cx="38" cy="65" r="5" fill="#E8C478" />
-                <circle cx="62" cy="65" r="5" fill="#E8C478" />
-                <path d="M15 80 Q50 90 85 80" stroke="#E8C478" strokeWidth="4" />
-              </svg>
-            </div>
-            <div>
-              <span className="font-serif font-bold text-lg tracking-wider block text-[#2C4C3B]">職域所</span>
-              <span className="text-[10px] uppercase tracking-widest font-mono text-[#C67C56] -mt-1 block">CRAFT hub</span>
-            </div>
-          </div>
-
-          {/* 導航分頁標籤 */}
-          <nav className="hidden md:flex space-x-1 lg:space-x-2">
-            {[
-              { id: 'home', label: '首頁' },
-              { id: 'brand', label: '創辦人與吉祥物' },
-              { id: 'program', label: '微光實戰陪跑' },
-              { id: 'courses', label: '專業進階課' },
-              { id: 'directory', label: '諮詢師在線' },
-              { id: 'benefits', label: '諮詢價值與回饋' }
-            ].map(tab => (
-              <button
-                key={tab.id}
-                onClick={() => { setActiveTab(tab.id); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
-                  activeTab === tab.id 
-                    ? 'bg-[#2C4C3B] text-[#F7F5F0] shadow-sm' 
-                    : 'text-[#2C4C3B]/80 hover:bg-[#2C4C3B]/5 hover:text-[#2C4C3B]'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </nav>
-
-          {/* 右側登入狀態控制端 */}
-          <div className="flex items-center space-x-3">
-            {currentUser ? (
-              <div className="flex items-center space-x-2">
-                <div className="text-right hidden sm:block">
-                  <p className="text-xs font-medium text-[#2C4C3B]">{currentUser.name}</p>
-                  <span className="inline-block text-[10px] bg-[#C67C56]/20 text-[#C67C56] px-1.5 py-0.5 rounded font-mono">
-                    {currentUser.role === 'admin' ? '營運總管' : currentUser.role === 'practitioner' ? 'B端諮詢師' : 'C端學員'}
-                  </span>
+          {/* Persistent Sticky Navigation Header Navbar */}
+          <header className="sticky top-0 z-50 border-b border-forestGreen/10 backdrop-blur-md bg-riceWhite/90 h-20">
+            <div className="max-w-7xl mx-auto px-4 h-full flex items-center justify-between">
+              <div className="flex items-center space-x-3 cursor-pointer" onClick={() => setActiveTab('home')}>
+                <div className="h-11 w-11 rounded-xl bg-forestGreen flex items-center justify-center p-2 border border-shimmerGold/40 shadow-sm">
+                  <svg viewBox="0 0 100 100" fill="none" className="w-full h-full">
+                    <path d="M50 15 L25 80 L75 80 Z" stroke="#E8C478" strokeWidth="6" strokeLinecap="round" strokeLinejoin="round" />
+                    <circle cx="50" cy="40" r="8" fill="#C67C56" />
+                    <path d="M15 80 Q50 90 85 80" stroke="#E8C478" strokeWidth="4" />
+                  </svg>
                 </div>
-                <button 
-                  onClick={() => { setCurrentUser(null); setActiveTab('home'); }}
-                  className="text-xs px-3 py-1.5 border border-[#C67C56] text-[#C67C56] rounded-md hover:bg-[#C67C56]/10 transition-colors"
-                >
-                  登出
-                </button>
-              </div>
-            ) : (
-              <button
-                onClick={() => setAuthMode('login')}
-                className="text-xs px-4 py-2 bg-[#2C4C3B] text-[#F7F5F0] rounded-lg font-medium hover:bg-[#2C4C3B]/90 shadow-sm transition-all hover:-translate-y-0.5"
-              >
-                登入 / 註冊
-              </button>
-            )}
-          </div>
-        </div>
-      </header>
-
-      {/* ============================================================================
-          實時虛擬電子郵件通知面板 (頂部動態提示)
-         ============================================================================ */}
-      {userInbox.length > 0 && (
-        <div className="bg-[#E8C478]/20 border-b border-[#E8C478]/40 px-4 py-2 text-xs">
-          <div className="max-w-7xl mx-auto flex items-center justify-between">
-            <div className="flex items-center space-x-2 truncate">
-              <span className="flex h-2 w-2 rounded-full bg-[#C67C56] animate-pulse"></span>
-              <strong className="text-[#C67C56]">【虛擬電子郵件通知系統信箱】</strong>
-              <span className="text-[#2C4C3B]/80 truncate">最新郵件：{userInbox[0].subject} ({userInbox[0].time})</span>
-            </div>
-            <button 
-              onClick={() => {
-                alert(`收件匣歷史記錄 (${userInbox.length}封封):\n\n` + userInbox.map((m, i) => `[${i+1}] ${m.subject}\n收件者: ${m.to}\n內容摘要: ${m.content.replace(/<[^>]*>/g, '').substring(0,60)}...`).join('\n\n'));
-              }}
-              className="underline text-[#C67C56] font-semibold flex-shrink-0 ml-4 hover:text-[#C67C56]/80"
-            >
-              開啟模擬收件匣 ({userInbox.length})
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* ============================================================================
-          5. 主體內容分頁切換機制
-         ============================================================================ */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        
-        {/* TAB 1: 網頁首頁 (Landing + 互動卡點急速解碼器) */}
-        {activeTab === 'home' && (
-          <div className="space-y-16 animate-fade-in">
-            {/* Hero 區塊 */}
-            <div className="text-center max-w-3xl mx-auto space-y-6 pt-6">
-              <div className="inline-flex items-center space-x-2 px-3 py-1 bg-[#2C4C3B]/5 rounded-full text-xs text-[#2C4C3B] font-medium border border-[#2C4C3B]/10">
-                <span className="h-1.5 w-1.5 rounded-full bg-[#C67C56]"></span>
-                <span>2026 啟動新創品牌正式上線</span>
-              </div>
-              <h1 className="text-4xl sm:text-5xl font-serif font-bold text-[#2C4C3B] leading-tight">
-                讓助人者的專業微光，<br className="sm:hidden"/>
-                <span className="text-[#C67C56] relative inline-block">
-                  匯聚成塔
-                  <span className="absolute left-0 bottom-1 w-full h-2 bg-[#E8C478]/30 -z-10"></span>
-                </span>
-              </h1>
-              <p className="text-base text-[#2C4C3B]/80 leading-relaxed max-w-2xl mx-auto font-light">
-                「敬畏心是卓越諮詢師的起點，諮詢是需要時間熟成的工藝。」<br/>
-                我們不追求快餐速成，也不教虛浮包裝。職域所是一所專為職涯助人者打造的實戰維護與換證續證深度加速行會。
-              </p>
-              
-              <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-4">
-                <button 
-                  onClick={() => {
-                    const el = document.getElementById('decoder-section');
-                    if (el) el.scrollIntoView({ behavior: 'smooth' });
-                  }}
-                  className="w-full sm:w-auto px-6 py-3 bg-[#2C4C3B] text-[#F7F5F0] rounded-xl font-medium hover:bg-[#2C4C3B]/90 shadow-md transition-all transform hover:-translate-y-0.5"
-                >
-                  急速解碼您的職涯卡點
-                </button>
-                <button 
-                  onClick={() => setActiveTab('program')}
-                  className="w-full sm:w-auto px-6 py-3 bg-white text-[#2C4C3B] border border-[#2C4C3B]/20 rounded-xl font-medium hover:bg-[#2C4C3B]/5 transition-all"
-                >
-                  了解微光孵化陪跑計畫
-                </button>
-              </div>
-            </div>
-
-            {/* 核心痛點同理圖卡區 */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              {[
-                { title: '起步迷惘', desc: '剛拿到證照，充滿熱情卻缺乏清晰跨出第一步的實戰對應地圖。', label: '狀態 A' },
-                { title: '停滯瓶頸', desc: '接過零星公益個案但陷入瓶頸，缺乏高階技術突破與長遠商業路徑。', label: '狀態 B' },
-                { title: '孤單內耗', desc: '獨自面對棘手個案感到無力自我懷疑，缺乏專業導師進行個案覆盤督導。', label: '狀態 C' },
-                { title: '學分焦慮', desc: 'PAC / NCDA 續證三年換證期限逐漸逼近，面對龐大繼續教育點數一頭霧水。', label: '狀態 D' }
-              ].map((item, idx) => (
-                <div key={idx} className="bg-white rounded-2xl p-6 border border-[#2C4C3B]/5 shadow-sm space-y-3 transition-all hover:shadow-md hover:border-[#E8C478]/40">
-                  <span className="text-[10px] font-mono uppercase text-[#C67C56] font-semibold tracking-wider">{item.label}</span>
-                  <h3 className="text-lg font-serif font-bold text-[#2C4C3B]">{item.title}</h3>
-                  <p className="text-xs text-[#2C4C3B]/70 leading-relaxed font-light">{item.desc}</p>
-                </div>
-              ))}
-            </div>
-
-            {/* 雙軌互動式卡點急速解碼器區塊 */}
-            <div id="decoder-section" className="bg-[#2C4C3B] text-[#F7F5F0] rounded-3xl p-8 sm:p-12 shadow-xl border border-[#E8C478]/20 relative overflow-hidden">
-              <div className="absolute top-0 right-0 p-6 opacity-10 text-8xl font-serif pointer-events-none">CRAFT</div>
-              
-              <div className="max-w-2xl mx-auto space-y-8">
-                <div className="text-center space-y-2">
-                  <h2 className="text-2xl sm:text-3xl font-serif font-bold text-[#E8C478]">3層職涯卡點急速解碼器</h2>
-                  <p className="text-xs text-[#F7F5F0]/80">拒絕雞湯空話，全面去 AI 化結構硬核檢測，精準定位盲點</p>
-                </div>
-
-                {quizStep === 0 && !quizResult && (
-                  <div className="space-y-6 text-center">
-                    <p className="text-sm font-light">請選擇您當前的真實身份，系統將為您自動切換專屬問答軌道：</p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-                      <button 
-                        onClick={() => START_QUIZ('explorer')}
-                        className="p-6 rounded-2xl border border-[#E8C478]/30 bg-[#F7F5F0]/5 hover:bg-[#F7F5F0]/10 text-left transition-all hover:border-[#E8C478] space-y-2"
-                      >
-                        <h4 className="text-lg font-bold text-[#E8C478] flex items-center justify-between">
-                          <span>個人生涯探索者</span> <span>➔</span>
-                        </h4>
-                        <p className="text-xs text-[#F7F5F0]/70 font-light leading-relaxed">正面臨求職、轉職迷惘，或是不知道自己適合什麼、如何提升自我價值的民眾與大專院校學生。</p>
-                      </button>
-
-                      <button 
-                        onClick={() => START_QUIZ('practitioner')}
-                        className="p-6 rounded-2xl border border-[#E8C478]/30 bg-[#F7F5F0]/5 hover:bg-[#F7F5F0]/10 text-left transition-all hover:border-[#E8C478] space-y-2"
-                      >
-                        <h4 className="text-lg font-bold text-[#E8C478] flex items-center justify-between">
-                          <span>諮詢工作者 / 助人新手</span> <span>➔</span>
-                        </h4>
-                        <p className="text-xs text-[#F7F5F0]/70 font-light leading-relaxed">已取得或正在考取 CDA / SCPC 等相關證照，面臨證照後斷層、不敢接案收費或有學分焦慮的諮詢師。</p>
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {quizStep > 0 && (
-                  <div className="space-y-6">
-                    <div className="flex items-center justify-between text-xs text-[#E8C478]/80 font-mono">
-                      <span>軌道：{quizTrack === 'explorer' ? '個人生涯探索' : '專業諮詢工作者'}</span>
-                      <span>題目：{quizStep} / 5</span>
-                    </div>
-                    {/* 進度條 */}
-                    <div className="w-full bg-[#F7F5F0]/20 h-1 rounded-full overflow-hidden">
-                      <div className="bg-[#E8C478] h-full transition-all duration-300" style={{ width: `${quizStep * 20}%` }}></div>
-                    </div>
-
-                    <h3 className="text-lg font-medium leading-relaxed pt-2">
-                      {MOCK_QUIZ_QUESTIONS[quizTrack][quizStep - 1].q}
-                    </h3>
-
-                    <div className="space-y-3 pt-2">
-                      {MOCK_QUIZ_QUESTIONS[quizTrack][quizStep - 1].options.map((opt, oIdx) => (
-                        <button
-                          key={oIdx}
-                          onClick={() => NEXT_QUIZ_STEP(opt.w)}
-                          className="w-full text-left p-4 rounded-xl border border-[#F7F5F0]/20 bg-[#F7F5F0]/5 hover:bg-[#F7F5F0]/10 hover:border-[#E8C478]/50 transition-all text-sm leading-relaxed"
-                        >
-                          {opt.t}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {quizResult && (
-                  <div className="bg-[#F7F5F0] text-[#2C4C3B] rounded-2xl p-6 sm:p-8 space-y-5 animate-scale-up">
-                    <div className="flex items-center space-x-2 text-[#C67C56]">
-                      <span className="text-xl">🎯</span>
-                      <h3 className="text-xl font-serif font-bold">{quizResult.title}</h3>
-                    </div>
-                    <p className="text-sm leading-relaxed text-[#2C4C3B]/90 font-light border-l-2 border-[#C67C56] pl-4">
-                      {quizResult.desc}
-                    </p>
-                    <p className="text-xs bg-[#E8C478]/20 text-[#2C4C3B] p-3 rounded-lg font-medium">
-                      🚀 <strong>行動指引：</strong>{quizResult.cta}
-                    </p>
-                    <div className="text-center pt-2">
-                      <button 
-                        onClick={() => setQuizResult(null)}
-                        className="text-xs px-4 py-2 border border-[#2C4C3B]/30 text-[#2C4C3B] rounded-md hover:bg-[#2C4C3B]/5 transition-colors"
-                      >
-                        重新解碼測驗
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* TAB 2: 品牌介紹 (核心成員與吉祥物互動圖卡) */}
-        {activeTab === 'brand' && (
-          <div className="space-y-12 animate-fade-in">
-            <div className="text-center max-w-2xl mx-auto space-y-3">
-              <h2 className="text-3xl font-serif font-bold text-[#2C4C3B]">創辦團隊故事與黏土吉祥物</h2>
-              <p className="text-sm text-[#2C4C3B]/70 font-light">
-                「不強調高不可攀的完美專業，我們展現真實不裝飾的職人失敗學。」 來到職域所，找我們這群抱持職人精神的諮詢師就對了！
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {TEAM_MEMBERS.map((member) => (
-                <div key={member.id} className="bg-white rounded-3xl border border-[#2C4C3B]/10 overflow-hidden shadow-sm flex flex-col justify-between transition-all hover:shadow-md">
-                  
-                  {/* 成員 Profile 區 */}
-                  <div className="p-6 sm:p-8 space-y-4">
-                    <div className="space-y-1">
-                      <span className="text-xs font-mono font-bold text-[#C67C56] block">{member.element}</span>
-                      <h3 className="text-xl font-serif font-bold text-[#2C4C3B]">{member.name}</h3>
-                      <p className="text-xs text-[#2C4C3B]/90 font-medium">{member.title}</p>
-                      <p className="text-[11px] text-[#2C4C3B]/70 font-light italic">{member.cert}</p>
-                    </div>
-                    <p className="text-xs text-[#2C4C3B]/80 leading-relaxed font-light bg-[#F7F5F0] p-3 rounded-xl border border-[#2C4C3B]/5">
-                      {member.bio}
-                    </p>
-                  </div>
-
-                  {/* 手繪黏土風吉祥物連動區塊 */}
-                  <div className="p-6 border-t border-[#2C4C3B]/5 bg-[#F7F5F0]/50 space-y-3">
-                    <div className="flex items-center space-x-3">
-                      {/* 吉祥物迷你色塊圖示 */}
-                      <div className="h-10 w-10 rounded-full flex items-center justify-center text-xl shadow-inner" style={{ backgroundColor: member.mascotColor + '20', border: `1.5px dashed ${member.mascotColor}` }}>
-                        {member.id === 'tingyan' ? '🪵' : member.id === 'rake' ? '🌱' : '✨'}
-                      </div>
-                      <div>
-                        <h4 className="text-xs font-bold text-[#2C4C3B]">專屬吉祥物：<span style={{ color: member.mascotColor }}>{member.mascotName}</span></h4>
-                        <span className="text-[10px] text-[#2C4C3B]/50 font-mono">蠟筆手繪邊緣不平整風格設計</span>
-                      </div>
-                    </div>
-                    <p className="text-[11px] text-[#2C4C3B]/70 leading-relaxed font-light">
-                      {member.mascotDesc}
-                    </p>
-                  </div>
-
-                </div>
-              ))}
-            </div>
-
-            {/* 三年微光成林計畫願景 */}
-            <div className="bg-white border border-[#2C4C3B]/10 rounded-3xl p-8 max-w-4xl mx-auto space-y-6">
-              <h3 className="text-xl font-serif font-bold text-center text-[#2C4C3B]">🌱 【三年・微光成林願景計畫】</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
-                <div className="space-y-1">
-                  <h4 className="text-sm font-bold text-[#C67C56]">第一年：紮根期</h4>
-                  <p className="text-xs text-[#2C4C3B]/80 font-light">孕育 100 顆自信種子諮詢師，補足考證後的死亡斷層實戰力。</p>
-                </div>
-                <div className="space-y-1">
-                  <h4 className="text-sm font-bold text-[#2C4C3B]">第二年：灌溉期</h4>
-                  <p className="text-xs text-[#2C4C3B]/80 font-light">全面串接大專院校、政府勞動部校園講座，穩定派案提供安全練功源。</p>
-                </div>
-                <div className="space-y-1">
-                  <h4 className="text-sm font-bold text-[#E8C478] bg-[#2C4C3B] py-0.5 rounded">第三年：微光成林</h4>
-                  <p className="text-xs text-[#2C4C3B]/80 font-light">打造無邊界聯合助人事務所，服務突破一千名以上個案與學員。</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* TAB 3: 計畫介紹 (微光陪跑計畫、保證金返還、學分計算機) */}
-        {activeTab === 'program' && (
-          <div className="space-y-12 animate-fade-in">
-            {/* 飛輪模型說明 */}
-            <div className="bg-[#2C4C3B] text-[#F7F5F0] rounded-3xl p-8 sm:p-10 grid grid-cols-1 md:grid-cols-2 gap-8 items-center border border-[#E8C478]/20">
-              <div className="space-y-4">
-                <span className="text-xs font-mono font-bold text-[#E8C478] block">SERVICE ENGINE</span>
-                <h2 className="text-2xl sm:text-3xl font-serif font-bold leading-tight">【I.O.R 實戰成長飛輪】培力系統</h2>
-                <p className="text-xs text-[#F7F5F0]/80 leading-relaxed font-light">
-                  在職域所，學習不是百米衝刺，而是一場有人陪伴的馬拉松。我們透過深度的培力、允許試錯的安全派案實踐、以及資深督導的覆盤，建構完全閉環。
-                </p>
-                <div className="space-y-3 pt-2 text-xs">
-                  <p><strong>📖 Input 培力 (Empower)：</strong> 進階職能學院，傳授書本沒寫的真實觀點，深化內功學分。</p>
-                  <p><strong>🚀 Output 實踐 (Action)：</strong> 實戰派案中心，提供媒合個案，跨出真實付費執業的第一步。</p>
-                  <p><strong>🛡️ Review 覆盤 (Review)：</strong> 專業督導圈，CDI 導師領路團督個督，精準打擊盲點。</p>
-                </div>
-              </div>
-              {/* 飛輪圖形互動模擬 */}
-              <div className="bg-[#F7F5F0]/5 border border-[#F7F5F0]/10 rounded-2xl p-6 text-center space-y-4">
-                <h3 className="text-sm font-bold text-[#E8C478]">【微光孵化】實戰陪跑計畫保證金返還模擬</h3>
-                <p className="text-[11px] text-[#F7F5F0]/70 font-light">計畫定價 $6,000，只要完成下方遊戲化行銷產出任務，即可無縫退還 $4,000 元，實際自付行政成本僅需 $2,000 元！</p>
-                
-                <div className="space-y-2 text-left text-xs pt-2">
-                  <label className="flex items-center space-x-2 cursor-pointer bg-[#F7F5F0]/5 p-2 rounded hover:bg-[#F7F5F0]/10">
-                    <input type="checkbox" checked={taskProfile} onChange={(e)=>setTaskProfile(e.target.checked)} className="rounded text-[#C67C56] focus:ring-0" />
-                    <span className={taskProfile ? 'line-through text-[#F7F5F0]/40' : ''}>任務 1: 完成標準化 IP 履歷與自我介紹上架</span>
-                  </label>
-                  <label className="flex items-center space-x-2 cursor-pointer bg-[#F7F5F0]/5 p-2 rounded hover:bg-[#F7F5F0]/10">
-                    <input type="checkbox" checked={taskCaseStudy} onChange={(e)=>setTaskCaseStudy(e.target.checked)} className="rounded text-[#C67C56] focus:ring-0" />
-                    <span className={taskCaseStudy ? 'line-through text-[#F7F5F0]/40' : ''}>任務 2: 撰寫 2 篇匿名真實個案諮詢故事與手法</span>
-                  </label>
-                  <label className="flex items-center space-x-2 cursor-pointer bg-[#F7F5F0]/5 p-2 rounded hover:bg-[#F7F5F0]/10">
-                    <input type="checkbox" checked={taskSocialProof} onChange={(e)=>setTaskSocialProof(e.target.checked)} className="rounded text-[#C67C56] focus:ring-0" />
-                    <span className={taskSocialProof ? 'line-through text-[#F7F5F0]/40' : ''}>任務 3: 於個人社群公開發布參與見證心得 2 篇</span>
-                  </label>
-                  <label className="flex items-center space-x-2 cursor-pointer bg-[#F7F5F0]/5 p-2 rounded hover:bg-[#F7F5F0]/10">
-                    <input type="checkbox" checked={taskVideo} onChange={(e)=>setTaskVideo(e.target.checked)} className="rounded text-[#C67C56] focus:ring-0" />
-                    <span className={taskVideo ? 'line-through text-[#F7F5F0]/40' : ''}>任務 4: 錄製 1 分鐘結業反思短影音</span>
-                  </label>
-                </div>
-
-                <div className="border-t border-[#F7F5F0]/10 pt-3 flex items-center justify-between text-xs">
-                  <span>當前動態模擬預計退款額度：</span>
-                  <span className="text-xl font-mono text-[#E8C478] font-bold">
-                    ${( (taskProfile?1:0) + (taskCaseStudy?1:0) + (taskSocialProof?1:0) + (taskVideo?1:0) ) * 1000}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between text-xs text-[#E8C478]">
-                  <span>最終實際自付行政成本：</span>
-                  <span className="font-bold font-mono text-base">
-                    ${6000 - (( (taskProfile?1:0) + (taskCaseStudy?1:0) + (taskSocialProof?1:0) + (taskVideo?1:0) ) * 1000)} 元
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* CEP 續證學分缺口即時計算機 */}
-            <div className="bg-white border border-[#2C4C3B]/10 rounded-3xl p-6 sm:p-10 space-y-6 max-w-3xl mx-auto shadow-sm">
-              <div className="text-center space-y-1">
-                <h3 className="text-xl font-serif font-bold text-[#2C4C3B]">📊 繼續教育 (CEP) 續證學分缺口即時計算機</h3>
-                <p className="text-xs text-[#2C4C3B]/60">NCDA / PAC 規範三年需滿 120 學分，快來算算你目前還差多少！</p>
-              </div>
-
-              <div className="space-y-4 pt-2">
                 <div>
-                  <div className="flex justify-between text-xs mb-1 font-medium">
-                    <span>1. 參與專業進階授課時數 (1小時 = 1學分)</span>
-                    <span className="text-[#C67C56] font-mono">{cepCourses} 學分</span>
-                  </div>
-                  <input type="range" min="0" max="80" value={cepCourses} onChange={(e)=>setCepCourses(e.target.value)} className="w-full accent-[#C67C56]" />
-                </div>
-
-                <div>
-                  <div className="flex justify-between text-xs mb-1 font-medium">
-                    <span>2. 參與專業團體/個別督導時數 (1小時 = 2學分權重)</span>
-                    <span className="text-[#C67C56] font-mono">{cepSupervision * 2} 學分</span>
-                  </div>
-                  <input type="range" min="0" max="40" value={cepSupervision} onChange={(e)=>setCepSupervision(e.target.value)} className="w-full accent-[#C67C56]" />
-                </div>
-
-                <div>
-                  <div className="flex justify-between text-xs mb-1 font-medium">
-                    <span>3. 真實個案實務諮詢對談時數 (1小時 = 1.5學分權重)</span>
-                    <span className="text-[#C67C56] font-mono">{cepConsultations * 1.5} 學分</span>
-                  </div>
-                  <input type="range" min="0" max="40" value={cepConsultations} onChange={(e)=>setCepConsultations(e.target.value)} className="w-full accent-[#C67C56]" />
-                </div>
-
-                <div className="bg-[#F7F5F0] p-5 rounded-2xl border border-[#2C4C3B]/5 grid grid-cols-2 gap-4 text-center items-center">
-                  <div>
-                    <span className="text-xs block text-[#2C4C3B]/60">目前已累積學分</span>
-                    <span className="text-3xl font-serif font-bold text-[#2C4C3B]">{totalCepCalculated}</span>
-                    <span className="text-[10px] text-[#2C4C3B]/40 block">/ 120 學分</span>
-                  </div>
-                  <div className="border-l border-[#2C4C3B]/10">
-                    <span className="text-xs block text-[#2C4C3B]/60">續證學分缺口進度</span>
-                    <span className="text-3xl font-serif font-bold text-[#C67C56]">
-                      {120 - totalCepCalculated <= 0 ? '🎉 已達標' : `${120 - totalCepCalculated} 分`}
-                    </span>
-                    <span className="text-[10px] text-[#C67C56]/70 block font-light">加入微光陪跑可直接進補30分</span>
-                  </div>
+                  <span className="font-serif font-bold text-lg block text-forestGreen">職域所</span>
+                  <span className="text-[10px] uppercase tracking-widest font-mono text-warmClay -mt-1 block">CRAFT hub</span>
                 </div>
               </div>
-            </div>
-          </div>
-        )}
 
-        {/* TAB 4: 近期課程 (讀書會、進階課列表清單) */}
-        {activeTab === 'courses' && (
-          <div className="space-y-8 animate-fade-in">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-[#2C4C3B]/10 pb-4">
+              <nav className="hidden md:flex space-x-1">
+                {[
+                  { id: 'home', label: '首頁' },
+                  { id: 'brand', label: '創辦人與吉祥物' },
+                  { id: 'program', label: '微光實戰陪跑' },
+                  { id: 'courses', label: '專業進階課' },
+                  { id: 'directory', label: '諮詢師在線' },
+                  { id: 'benefits', label: '諮詢價值與回饋' }
+                ].map(tab => (
+                  <button
+                    key={tab.id}
+                    onClick={() => { setActiveTab(tab.id); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                      activeTab === tab.id ? 'bg-forestGreen text-riceWhite shadow-sm' : 'text-forestGreen/80 hover:bg-forestGreen/5'
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </nav>
+
               <div>
-                <h2 className="text-2xl font-serif font-bold text-[#2C4C3B]">專業進階學院與共學小聚</h2>
-                <p className="text-xs text-[#2C4C3B]/70 font-light">專為想精進實務工具及建立生存商業 IP 的助人者打造之長尾課程</p>
-              </div>
-              <span className="text-xs font-medium text-[#C67C56] bg-[#C67C56]/10 px-3 py-1 rounded-full self-startsm:self-auto">
-                📚 持續教育 CEP 學分認證合格單位
-              </span>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {MOCK_COURSES.map(course => (
-                <div key={course.id} className="bg-white rounded-2xl border border-[#2C4C3B]/5 p-6 shadow-sm flex flex-col justify-between space-y-4 hover:border-[#E8C478]">
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-[#2C4C3B]/5 text-[#2C4C3B]">{course.type}</span>
-                      <span className="text-xs font-mono text-[#C67C56] font-semibold">{course.credits}</span>
-                    </div>
-                    <h3 className="text-base font-serif font-bold text-[#2C4C3B] leading-snug">{course.title}</h3>
-                    <p className="text-xs text-[#2C4C3B]/60">授課講師：{course.instructor} | 時間：{course.date}</p>
+                {currentUser ? (
+                  <div className="flex items-center space-x-2">
+                    <span className="text-xs font-medium hidden sm:inline">{currentUser.name}</span>
+                    <button onClick={() => setCurrentUser(null)} class="text-xs px-2.5 py-1.5 border border-warmClay text-warmClay rounded-md hover:bg-warmClay/5">登出</button>
                   </div>
+                ) : (
+                  <button onClick={() => setAuthMode('login')} className="text-xs px-4 py-2 bg-forestGreen text-riceWhite rounded-lg font-medium hover:bg-forestGreen/90 shadow-sm">登入 / 註冊</button>
+                )}
+              </div>
+            </div>
+          </header>
 
-                  <div className="flex items-center justify-between border-t border-[#2C4C3B]/5 pt-3">
-                    <span className="text-sm font-bold font-mono text-[#2C4C3B]">${course.fee.toLocaleString()} 元</span>
-                    <button 
-                      onClick={() => setCourseRegModal(course)}
-                      className="px-4 py-1.5 bg-[#2C4C3B] text-[#F7F5F0] rounded-lg text-xs font-medium hover:bg-[#2C4C3B]/90 transition-colors"
-                    >
-                      席位預約報名
+          {/* Virtual Mail Container */}
+          {userInbox.length > 0 && (
+            <div className="bg-shimmerGold/10 border-b border-shimmerGold/30 px-4 py-2 text-xs text-center">
+              <span className="text-warmClay font-bold">【模擬系統郵件信箱】</span>
+              <span className="text-forestGreen/80"> 標題: {userInbox[0].subject} ({userInbox[0].time}) </span>
+              <button onClick={() => alert(userInbox[0].content.replace(/<[^>]*>/g, ''))} className="underline text-warmClay font-bold ml-2">查閱信件正文</button>
+            </div>
+          )}
+
+          {/* Main Workspace Frame */}
+          <main className="max-w-7xl mx-auto px-4 py-10 flex-1 w-full">
+            
+            {/* HOME VIEW */}
+            {activeTab === 'home' && (
+              <div className="space-y-16 animate-fade-in">
+                <div className="text-center max-w-3xl mx-auto space-y-6 pt-6">
+                  <div className="inline-flex items-center space-x-2 px-3 py-1 bg-forestGreen/5 rounded-full text-xs font-medium border border-forestGreen/10">
+                    <span className="h-1.5 w-1.5 rounded-full bg-warmClay"></span>
+                    <span>2026 啟動新創品牌正式上線</span>
+                  </div>
+                  <h1 className="text-4xl sm:text-5xl font-serif font-bold text-forestGreen leading-tight">
+                    讓助人者的專業微光，<br/>
+                    <span className="text-warmClay relative inline-block">匯聚成塔</span>
+                  </h1>
+                  <p className="text-sm text-forestGreen/80 leading-relaxed max-w-2xl mx-auto font-light">
+                    「敬畏心是卓越諮詢師的起點，諮詢是需要時間熟成的工藝。」<br/>
+                    我們不追求快餐速成，也不教虛浮包裝。職域所是一所專為職涯助人者打造的實戰維護與換證續證深度加速行會。
+                  </p>
+                  <div className="pt-2 flex justify-center">
+                    <button onClick={() => document.getElementById('quiz-anchor').scrollIntoView({ behavior: 'smooth' })} className="px-6 py-3 bg-forestGreen text-riceWhite rounded-xl text-sm font-medium hover:bg-forestGreen/90 shadow-md">
+                      急速解碼您的職涯卡點
                     </button>
                   </div>
                 </div>
-              ))}
-            </div>
-          </div>
-        )}
 
-        {/* TAB 5: 諮詢師在線 (前台專家媒合履歷名冊預約) */}
-        {activeTab === 'directory' && (
-          <div className="space-y-8 animate-fade-in">
-            <div className="text-center max-w-2xl mx-auto space-y-2">
-              <h2 className="text-2xl font-serif font-bold text-[#2C4C3B]">職域所持證專家在線名冊</h2>
-              <p className="text-xs text-[#2C4C3B]/70 font-light">
-                來到職域所，找我們這群抱持職人精神的諮詢師就對了！每一位夥伴皆經過嚴格實務小時覆盤審核。
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {practitionersList.map((practitioner) => (
-                <div key={practitioner.id} className="bg-white rounded-2xl border border-[#2C4C3B]/10 p-6 flex flex-col justify-between space-y-4 shadow-sm transition-all hover:shadow-md">
-                  <div className="space-y-3">
-                    <div className="flex items-center space-x-3">
-                      <div className="h-12 w-12 bg-[#F7F5F0] border border-[#2C4C3B]/10 rounded-xl flex items-center justify-center text-2xl shadow-inner">
-                        {practitioner.avatar}
-                      </div>
-                      <div>
-                        <h3 className="text-base font-serif font-bold text-[#2C4C3B]">{practitioner.name}</h3>
-                        <div className="flex items-center space-x-2 text-[10px] text-[#C67C56] font-mono mt-0.5">
-                          <span>實務：{practitioner.hours}</span>
-                          <span>評分：{practitioner.rate}</span>
-                        </div>
-                      </div>
+                {/* 4 Cards Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                  {['起步迷惘', '停滯瓶頸', '孤單內耗', '學分焦慮'].map((txt, i) => (
+                    <div key={i} className="bg-white rounded-2xl p-6 border border-forestGreen/5 shadow-sm space-y-2">
+                      <span className="text-[10px] font-mono text-warmClay font-bold block">STATUS 0{i+1}</span>
+                      <h3 className="font-serif font-bold text-base">{txt}</h3>
+                      <p className="text-xs text-forestGreen/70 font-light">面對多變市場，協助突破取得證照後不敢收費或即將到期的死亡斷層。</p>
                     </div>
-
-                    <div className="flex flex-wrap gap-1">
-                      {practitioner.tags.map((tg, tIdx) => (
-                        <span key={tIdx} className="text-[9px] bg-[#2C4C3B]/5 text-[#2C4C3B] px-1.5 py-0.5 rounded">{tg}</span>
-                      ))}
-                    </div>
-
-                    <p className="text-xs text-[#2C4C3B]/80 font-light leading-relaxed">
-                      {practitioner.bio}
-                    </p>
-                  </div>
-
-                  <button 
-                    onClick={() => setBookingModal(practitioner)}
-                    className="w-full py-2 bg-white text-[#2C4C3B] border border-[#2C4C3B]/20 rounded-xl text-xs font-semibold hover:bg-[#2C4C3B] hover:text-[#F7F5F0] transition-all"
-                  >
-                    1對1 預約媒合對話
-                  </button>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </div>
-        )}
 
-        {/* TAB 6: 學員與學員好處 / 諮詢價值 */}
-        {activeTab === 'benefits' && (
-          <div className="space-y-12 animate-fade-in max-w-4xl mx-auto">
-            <div className="text-center space-y-2">
-              <h2 className="text-2xl font-serif font-bold text-[#2C4C3B]">為什麼要在這裡打磨你的諮詢手藝？</h2>
-              <p className="text-xs text-[#2C4C3B]/70">聽聽過往走過證照後斷層、在職域所匯聚微光的學員真實心聲</p>
-            </div>
-
-            <div className="space-y-6">
-              {[
-                { name: '跨界諮詢師 廖小姐', before: '剛考完 CDA 證照，手握大把工具理論，但遇到真實個案哭泣時手足無措，根本不敢收費執業。', after: '加入微光孵化陪跑，在脆鹽老師一對一督導兜底之下，拆解了真實 12 小時個案盲點，現在已經順利接到自己的第一批付費個案，底氣完全不同！' },
-                { name: '現役助人工作者 Kevin', before: '三年 120 學分续證壓力山大，網路上相關資訊破碎繁瑣，每天都在焦慮資格中斷。', after: '職域所的前端儀表板一站式幫我搞定！參與兩場高互動專題工作坊與定期督導小聚，學分缺口直接補齊，更重要是找到了一群不孤單內耗的戰友！' }
-              ].map((feedback, fIdx) => (
-                <div key={fIdx} className="bg-white rounded-2xl p-6 border border-[#2C4C3B]/10 shadow-sm space-y-3">
-                  <span className="text-xs font-bold text-[#C67C56]">✦ {feedback.name} 的全面蛻變：</span>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-light leading-relaxed">
-                    <div className="bg-[#C67C56]/5 p-3 rounded-xl border-l-2 border-[#C67C56]">
-                      <strong className="block text-[#C67C56] font-medium mb-1">🔍 之前的卡點與內耗：</strong>
-                      {feedback.before}
+                {/* Question Section */}
+                <div id="quiz-anchor" className="bg-forestGreen text-riceWhite rounded-3xl p-8 sm:p-12 shadow-xl relative overflow-hidden">
+                  <div className="max-w-2xl mx-auto space-y-6">
+                    <div className="text-center space-y-1">
+                      <h2 className="text-2xl font-serif font-bold text-shimmerGold">3層職涯卡點急速解碼器</h2>
+                      <p className="text-xs text-riceWhite/70">結構化硬核檢測項目，拒絕空泛雞湯</p>
                     </div>
-                    <div className="bg-[#2C4C3B]/5 p-3 rounded-xl border-l-2 border-[#2C4C3B]">
-                      <strong className="block text-[#2C4C3B] font-medium mb-1">✨ 加盟職域所後的突破：</strong>
-                      {feedback.after}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
 
-        {/* ============================================================================
-            6. 特殊控制台：諮詢師加盟註冊佇列與營運端管理 (模擬後台運作)
-           ============================================================================ */}
-        {currentUser && currentUser.role === 'practitioner' && currentUser.status === 'pending' && (
-          <div className="mt-12 bg-white border-2 border-dashed border-[#C67C56] rounded-3xl p-6 sm:p-8 space-y-5 animate-scale-up">
-            <div className="flex items-center space-x-3 text-[#C67C56]">
-              <span className="text-2xl animate-spin">⏳</span>
-              <div>
-                <h3 className="text-lg font-serif font-bold text-[#2C4C3B]">持證諮詢師資格加盟審核大廳 (B端待命室)</h3>
-                <p className="text-xs text-[#2C4C3B]/70 font-light">當前狀態：<strong>資格嚴格審查中...</strong></p>
-              </div>
-            </div>
-            <p className="text-xs text-[#2C4C3B]/80 leading-relaxed font-light">
-              親愛的 {currentUser.name} 夥伴，您的資料已安全拋轉至後台管理中心。您可以點選右側上方切換登出，或者如果您發現選錯身分（原本只想當一般大眾學員探索卡點），可以點擊下方按鈕進行「時空倒流鈕」救援！
-            </p>
-            <div className="pt-2">
-              <button
-                onClick={handleTimeTravelRescue}
-                className="px-4 py-2 bg-[#C67C56] text-white text-xs font-medium rounded-xl hover:bg-[#C67C56]/90 shadow transition-all transform hover:scale-105"
-              >
-                🎛️ 觸發「時空倒流鈕」身分救援（切換回學員身分）
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* 營運管理後台 E端 視圖 (當前登入為 admin@crafthub.com 時顯現) */}
-        {currentUser && currentUser.role === 'admin' && (
-          <div className="mt-12 bg-[#2C4C3B]/5 border border-[#2C4C3B]/20 rounded-3xl p-6 sm:p-8 space-y-6">
-            <div className="border-b border-[#2C4C3B]/10 pb-3 flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-serif font-bold text-[#2C4C3B]">⚙️ 營運總管理端核心控制台 (E端 最高權限)</h3>
-                <p className="text-xs text-[#2C4C3B]/60">管理員登入：{currentUser.email} | CRM 大數據即時監控</p>
-              </div>
-              <span className="text-[10px] bg-[#2C4C3B] text-white px-2 py-0.5 rounded font-mono">系統初始化數據健全</span>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* 審核佇列 */}
-              <div className="bg-white p-4 rounded-2xl border border-[#2C4C3B]/10 space-y-3">
-                <h4 className="text-xs font-bold text-[#C67C56] uppercase">待審核諮詢師加盟佇列</h4>
-                {pendingApprovals.length === 0 ? (
-                  <p className="text-xs text-[#2C4C3B]/50 font-light py-4 text-center">暫無等待審核的諮詢師申請。</p>
-                ) : (
-                  <div className="space-y-2">
-                    {pendingApprovals.map((apply, aIdx) => (
-                      <div key={aIdx} className="bg-[#F7F5F0] p-3 rounded-xl flex items-center justify-between text-xs">
-                        <div>
-                          <p className="font-semibold text-[#2C4C3B]">{apply.name} ({apply.email})</p>
-                          <span className="text-[10px] text-[#2C4C3B]/60 block">{apply.cert} | 申請日: {apply.applyTime}</span>
-                        </div>
-                        <button
-                          onClick={() => approvePractitioner(apply.email)}
-                          className="px-3 py-1 bg-[#2C4C3B] text-white text-[11px] rounded hover:bg-[#2C4C3B]/90 transition-colors"
-                        >
-                          核准上架
+                    {quizStep === 0 && !quizResult && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4">
+                        <button onClick={() => START_QUIZ('explorer')} className="p-5 rounded-xl border border-shimmerGold/30 bg-riceWhite/5 text-left hover:border-shimmerGold transition-all">
+                          <h4 className="text-sm font-bold text-shimmerGold">個人生涯探索者 ➔</h4>
+                          <p className="text-xs text-riceWhite/70 font-light mt-1">正面臨求職、轉職迷惘，想突破盲點的民眾或學生。</p>
+                        </button>
+                        <button onClick={() => START_QUIZ('practitioner')} className="p-5 rounded-xl border border-shimmerGold/30 bg-riceWhite/5 text-left hover:border-shimmerGold transition-all">
+                          <h4 className="text-sm font-bold text-shimmerGold">諮詢工作者 / 助人新手 ➔</h4>
+                          <p className="text-xs text-riceWhite/70 font-light mt-1">已取得證照，面臨執業斷層或學分續證焦慮者。</p>
                         </button>
                       </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+                    )}
 
-              {/* CRM 動態軌跡追蹤面板 */}
-              <div className="bg-white p-4 rounded-2xl border border-[#2C4C3B]/10 space-y-3">
-                <h4 className="text-xs font-bold text-[#2C4C3B] uppercase">CRM 靈魂綁定使用者前世瀏覽軌跡</h4>
-                <div className="text-xs space-y-1 font-mono text-[#2C4C3B]/80 max-h-40 overflow-y-auto bg-[#F7F5F0] p-3 rounded-xl">
-                  {anonymousHistory.map((hist, hIdx) => (
-                    <p key={hIdx} className="truncate text-[11px]">⏱️ [軌跡點 {hIdx+1}] {hist}</p>
-                  ))}
-                  <p className="text-[10px] text-[#C67C56] font-semibold pt-1">➔ 自動貼標技術：訪客註冊時匿名軌跡自動與其 UUID 牢牢鎖定綁定。</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+                    {quizStep > 0 && (
+                      <div className="space-y-4">
+                        <div className="flex justify-between text-xs text-shimmerGold/80 font-mono">
+                          <span>軌道：{quizTrack === 'explorer' ? '生涯探索' : '助人工作者'}</span>
+                          <span>進度：{quizStep} / 5</span>
+                        </div>
+                        <h3 className="text-base font-medium leading-relaxed">{MOCK_QUIZ_QUESTIONS[quizTrack][quizStep - 1].q}</h3>
+                        <div className="space-y-2 pt-2">
+                          {MOCK_QUIZ_QUESTIONS[quizTrack][quizStep - 1].options.map((opt, oIdx) => (
+                            <button key={oIdx} onClick={() => NEXT_QUIZ_STEP(opt.w)} className="w-full text-left p-3.5 rounded-xl border border-riceWhite/10 bg-riceWhite/5 hover:bg-riceWhite/10 text-xs leading-relaxed transition-all">
+                              {opt.t}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
 
-      </main>
-
-      {/* ============================================================================
-          7. 頁尾沉穩連結區 Footer
-         ============================================================================ */}
-      <footer className="bg-[#2C4C3B] text-[#F7F5F0] border-t border-[#E8C478]/10 mt-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 grid grid-cols-1 md:grid-cols-3 gap-8 text-sm font-light">
-          
-          <div className="space-y-4">
-            <div className="flex items-center space-x-2">
-              <span className="font-serif font-bold text-lg text-[#E8C478]">職域所 CRAFT hub</span>
-            </div>
-            <p className="text-xs text-[#F7F5F0]/70 leading-relaxed font-light">
-              我們致力於消除理論學習與市場執業之間的斷層。透過正規換證學分課程、一對一督導覆盤與大專院校派案對接，陪你從持證新手跨向能獨當一面的職人專家。
-            </p>
-            <p className="text-[10px] font-mono text-[#E8C478]/60">© 2026 職域所 CRAFT hub. All rights reserved.</p>
-          </div>
-
-          <div className="space-y-3">
-            <h5 className="text-sm font-serif text-[#E8C478] font-semibold">快速分流導航</h5>
-            <ul className="text-xs space-y-2 text-[#F7F5F0]/80">
-              <li><button onClick={() => { setActiveTab('home'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:text-white transition-colors">回首頁 & 卡點解碼</button></li>
-              <li><button onClick={() => { setActiveTab('brand'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:text-white transition-colors">創辦人自我介紹與吉祥物</button></li>
-              <li><button onClick={() => { setActiveTab('program'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:text-white transition-colors">微光實戰陪跑計畫</button></li>
-              <li><button onClick={() => { setActiveTab('courses'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="hover:text-white transition-colors">專業進階課</button></li>
-            </ul>
-          </div>
-
-          <div className="space-y-3">
-            <h5 className="text-sm font-serif text-[#E8C478] font-semibold">聯絡我們</h5>
-            <ul className="text-xs space-y-2 font-light">
-              <li>客服信箱：<span className="font-mono text-[#E8C478]">service@crafthub.com</span></li>
-              <li>社群關注：<span className="font-mono text-[#E8C478]">@CRAFTHUB</span></li>
-              <li className="text-[10px] text-[#F7F5F0]/50 leading-relaxed">
-                如果您有校園合作、企業講座需求，歡迎直接利用右下角動態 CRM 聊天小視窗即時留言，我們的創辦團隊會第一時間為您進行顧問對接。
-              </li>
-            </ul>
-          </div>
-
-        </div>
-      </footer>
-
-      {/* ============================================================================
-          8. 全局前端動態 CRM 聊天小訊息框 Widget (右下角懸浮)
-         ============================================================================ */}
-      <div className="fixed bottom-6 right-6 z-50">
-        {isCrmOpen ? (
-          <div className="w-80 sm:w-96 bg-white border border-[#2C4C3B]/20 rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-scale-up">
-            {/* 訊息框頂部 */}
-            <div className="bg-[#2C4C3B] text-[#F7F5F0] p-4 flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <span className="h-2 w-2 rounded-full bg-[#E8C478] animate-pulse"></span>
-                <div>
-                  <h4 className="text-xs font-bold text-[#E8C478]">職域所持證夥伴實時在線</h4>
-                  <p className="text-[10px] text-[#F7F5F0]/70 font-light">CRM 匿名軌跡已自動靈魂綁定中</p>
-                </div>
-              </div>
-              <button onClick={() => setIsCrmOpen(false)} className="text-white hover:text-[#E8C478] font-bold text-sm">✕</button>
-            </div>
-
-            {/* 訊息歷史紀錄區 */}
-            <div className="p-4 h-64 overflow-y-auto space-y-3 bg-[#F7F5F0]/40 text-xs">
-              {crmMessages.map((msg, mIdx) => (
-                <div key={mIdx} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div 
-                    className={`max-w-[85%] rounded-xl p-2.5 leading-relaxed shadow-sm ${
-                      msg.sender === 'user' 
-                        ? 'bg-[#C67C56] text-white rounded-br-none' 
-                        : 'bg-white text-[#2C4C3B] rounded-bl-none border border-[#2C4C3B]/5'
-                    }`}
-                  >
-                    {msg.text}
+                    {quizResult && (
+                      <div className="bg-riceWhite text-forestGreen rounded-2xl p-6 space-y-4 animate-scale-up">
+                        <h3 className="text-lg font-serif font-bold text-warmClay">🎯 解碼分析：{quizResult.title}</h3>
+                        <p className="text-xs font-light border-l-2 border-warmClay pl-3 leading-relaxed text-forestGreen/90">{quizResult.desc}</p>
+                        <p className="text-xs bg-shimmerGold/20 p-3 rounded-lg font-medium">🚀 <strong>行動線索：</strong>{quizResult.cta}</p>
+                        <button onClick={() => setQuizResult(null)} className="text-xs px-3 py-1.5 border border-forestGreen/20 rounded hover:bg-forestGreen/5">重新測試</button>
+                      </div>
+                    )}
                   </div>
                 </div>
-              ))}
-            </div>
-
-            {/* 訊息輸入送出區 */}
-            <form onSubmit={handleCrmSend} className="p-3 border-t border-[#2C4C3B]/10 flex items-center space-x-2 bg-white">
-              <input 
-                type="text" 
-                value={crmInput}
-                onChange={(e) => setCrmInput(e.target.value)}
-                placeholder="輸入您的疑問（如：學分計算、費用、陪跑）..."
-                className="flex-1 bg-[#F7F5F0] text-xs rounded-lg p-2 border-0 focus:ring-1 focus:ring-[#2C4C3B] text-[#2C4C3B]"
-              />
-              <button type="submit" className="px-3 py-2 bg-[#2C4C3B] text-white rounded-lg text-xs font-medium hover:bg-[#2C4C3B]/90 transition-colors">
-                送出
-              </button>
-            </form>
-          </div>
-        ) : (
-          <button
-            onClick={() => setIsCrmOpen(true)}
-            className="h-14 w-14 bg-[#C67C56] text-white rounded-full flex items-center justify-center shadow-xl hover:bg-[#C67C56]/90 transition-all transform hover:scale-110 border border-[#E8C478]/50 animate-bounce"
-            title="開啟即時諮詢對話"
-          >
-            💬
-          </button>
-        )}
-      </div>
-
-      {/* ============================================================================
-          9. 各大模組彈出視窗模擬 (登入註冊彈窗、預約諮詢、課程席位報名)
-         ============================================================================ */}
-      {/* Auth 登入註冊模組彈窗 */}
-      {authMode && (
-        <div className="fixed inset-0 z-50 bg-[#2C4C3B]/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-[#F7F5F0] rounded-2xl max-w-sm w-full p-6 relative border border-[#E8C478]/40 shadow-2xl space-y-5 animate-scale-up text-sm">
-            <button onClick={() => setAuthMode(null)} className="absolute top-4 right-4 text-[#2C4C3B]/60 hover:text-[#2C4C3B]">✕</button>
-            
-            <div className="text-center space-y-1">
-              <h3 className="text-lg font-serif font-bold text-[#2C4C3B]">
-                {authMode === 'login' ? '歡迎回到 職域所' : '加入 職域所 行會共好圈'}
-              </h3>
-              <p className="text-xs text-[#2C4C3B]/60">大地與光的自然元素，提供穩定執業支持</p>
-            </div>
-
-            {authMode === 'register' && (
-              <div className="flex bg-[#2C4C3B]/5 p-1 rounded-lg text-xs font-medium text-center">
-                <button 
-                  onClick={() => setRegisterRole('learner')}
-                  className={`flex-1 py-1.5 rounded ${registerRole === 'learner' ? 'bg-[#2C4C3B] text-white' : 'text-[#2C4C3B]/80'}`}
-                >
-                  我是常規學員 (C端)
-                </button>
-                <button 
-                  onClick={() => setRegisterRole('practitioner')}
-                  className={`flex-1 py-1.5 rounded ${registerRole === 'practitioner' ? 'bg-[#2C4C3B] text-white' : 'text-[#2C4C3B]/80'}`}
-                >
-                  我是持證諮詢師 (B端)
-                </button>
               </div>
             )}
 
-            <form onSubmit={(e) => {
-              e.preventDefault();
-              const fd = new FormData(e.target);
-              if (authMode === 'login') {
-                handleMockLogin(fd.get('email'), fd.get('password'));
-              } else {
-                handleMockRegister(fd.get('name'), fd.get('email'), fd.get('password'));
-              }
-            }} className="space-y-3">
-              {authMode === 'register' && (
-                <div>
-                  <label className="text-xs font-medium block mb-1">真實姓名</label>
-                  <input required name="name" type="text" placeholder="請填寫姓名" className="w-full bg-white border border-[#2C4C3B]/10 rounded-lg p-2 text-xs text-[#2C4C3B] focus:ring-1 focus:ring-[#2C4C3B]" />
+            {/* BRAND STORY VIEW */}
+            {activeTab === 'brand' && (
+              <div className="space-y-12 animate-fade-in">
+                <div className="text-center max-w-xl mx-auto space-y-2">
+                  <h2 className="text-2xl font-serif font-bold">創辦團隊與黏土感吉祥物</h2>
+                  <p className="text-xs text-forestGreen/70 font-light">「不強調高不可攀的完美專業，我們展現真實不裝飾的職人失敗學。」</p>
                 </div>
-              )}
-              <div>
-                <label className="text-xs font-medium block mb-1">電子郵件信箱</label>
-                <input required name="email" type="email" placeholder="example@crafthub.com (輸入 admin@crafthub.com 可解鎖最高管理端)" className="w-full bg-white border border-[#2C4C3B]/10 rounded-lg p-2 text-xs text-[#2C4C3B] focus:ring-1 focus:ring-[#2C4C3B]" />
+
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                  {TEAM_MEMBERS.map(member => (
+                    <div key={member.id} className="bg-white rounded-2xl border border-forestGreen/10 overflow-hidden shadow-sm flex flex-col justify-between">
+                      <div className="p-6 space-y-4">
+                        <div>
+                          <span className="text-[10px] font-mono font-bold text-warmClay block">{member.element}</span>
+                          <h3 className="text-lg font-serif font-bold mt-0.5">{member.name}</h3>
+                          <p className="text-xs font-medium text-forestGreen/90">{member.title}</p>
+                          <p className="text-[10px] text-forestGreen/50 italic font-light">{member.cert}</p>
+                        </div>
+                        <p className="text-xs text-forestGreen/80 leading-relaxed font-light bg-riceWhite p-3 rounded-xl">{member.bio}</p>
+                      </div>
+                      <div className="p-5 border-t border-forestGreen/5 bg-riceWhite/50 space-y-2">
+                        <h4 className="text-xs font-bold" style={{ color: member.mascotColor }}>🎨 吉祥物：{member.mascotName}</h4>
+                        <p className="text-[11px] text-forestGreen/70 leading-relaxed font-light">{member.mascotDesc}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* PROGRAM / CALCULATOR VIEW */}
+            {activeTab === 'program' && (
+              <div className="space-y-12 animate-fade-in">
+                <div className="bg-forestGreen text-riceWhite rounded-3xl p-6 sm:p-10 grid grid-cols-1 md:grid-cols-2 gap-8 items-center border border-shimmerGold/20">
+                  <div className="space-y-3">
+                    <span className="text-xs font-mono text-shimmerGold block">SERVICE ENGINE</span>
+                    <h2 className="text-2xl font-serif font-bold">【I.O.R 實戰成長飛輪】</h2>
+                    <p className="text-xs text-riceWhite/80 font-light leading-relaxed">我們透過培力(Input)、允許試錯的安全派案實踐(Output)與資深督導覆盤(Review)，建立完整的支持系統。</p>
+                  </div>
+                  <div className="bg-riceWhite/5 border border-riceWhite/10 rounded-2xl p-5 space-y-3 text-xs">
+                    <h3 className="font-bold text-shimmerGold text-center">微光孵化計畫保證金返還模擬</h3>
+                    <div className="space-y-2">
+                      {[['task1', '完成標準化 IP 履歷自我介紹', taskProfile, setTaskProfile],
+                        ['task2', '撰寫 2 篇匿名真實個案故事', taskCaseStudy, setTaskCaseStudy],
+                        ['task3', '公開社群心得見證 2 篇', taskSocialProof, setTaskSocialProof],
+                        ['task4', '錄製 1 分鐘結業反思短影音', taskVideo, setTaskVideo]].map(([id, label, val, setVal], idx) => (
+                        <label key={idx} className="flex items-center space-x-2 cursor-pointer bg-riceWhite/5 p-2 rounded">
+                          <input type="checkbox" checked={val} onChange={(e)=>setVal(e.target.checked)} className="rounded accent-warmClay" />
+                          <span className={val ? 'line-through text-riceWhite/40' : ''}>{label}</span>
+                        </label>
+                      ))}
+                    </div>
+                    <div className="border-t border-riceWhite/10 pt-2 flex justify-between text-xs font-mono">
+                      <span>已達成退還款額度：</span>
+                      <span className="text-shimmerGold font-bold text-base">${((taskProfile?1:0)+(taskCaseStudy?1:0)+(taskSocialProof?1:0)+(taskVideo?1:0))*1000}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* CEP CALCULATOR */}
+                <div className="bg-white border border-forestGreen/10 rounded-2xl p-6 sm:p-8 max-w-2xl mx-auto space-y-6">
+                  <div className="text-center space-y-0.5">
+                    <h3 className="text-lg font-serif font-bold">📊 繼續教育 (CEP) 續證學分缺口計算機</h3>
+                    <p className="text-xs text-forestGreen/60">NCDA / PAC 規範三年需滿 120 學分</p>
+                  </div>
+                  <div className="space-y-4 text-xs">
+                    <div>
+                      <div className="flex justify-between mb-1"><span>1. 專業進階授課時數 (1小時 = 1學分)</span><span className="font-mono text-warmClay">{cepCourses} 分</span></div>
+                      <input type="range" min="0" max="80" value={cepCourses} onChange={(e)=>setCepCourses(e.target.value)} className="w-full accent-warmClay" />
+                    </div>
+                    <div>
+                      <div className="flex justify-between mb-1"><span>2. 團體/個別督導時數 (1小時 = 2學分)</span><span className="font-mono text-warmClay">{cepSupervision * 2} 分</span></div>
+                      <input type="range" min="0" max="40" value={cepSupervision} onChange={(e)=>setCepSupervision(e.target.value)} className="w-full accent-warmClay" />
+                    </div>
+                    <div className="bg-riceWhite p-4 rounded-xl flex justify-between items-center">
+                      <div><span className="text-[10px] text-forestGreen/50 block">累計已得學分</span><span className="text-2xl font-bold font-serif">{totalCep}</span><span className="text-[10px] text-forestGreen/40"> / 120</span></div>
+                      <div className="text-right">
+                        <span className="text-[10px] text-forestGreen/50 block">剩餘換證缺口</span>
+                        <span className="text-xl font-bold text-warmClay">{120 - totalCep <= 0 ? '🎉 已符合換證規範' : `${120 - totalCep} 學分`}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* COURSES VIEW */}
+            {activeTab === 'courses' && (
+              <div className="space-y-6 animate-fade-in">
+                <div className="border-b border-forestGreen/10 pb-4">
+                  <h2 className="text-xl font-serif font-bold">專業進階學院與共學小聚</h2>
+                  <p className="text-xs text-forestGreen/60 font-light">引領職涯助人者的深度觀點媒體 暨 進階實戰加速器。</p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {MOCK_COURSES.map(course => (
+                    <div key={course.id} className="bg-white border border-forestGreen/5 rounded-xl p-5 shadow-sm flex flex-col justify-between">
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-[10px]">
+                          <span className="bg-forestGreen/5 px-2 py-0.5 rounded font-medium">{course.type}</span>
+                          <span className="text-warmClay font-mono font-bold">{course.credits}</span>
+                        </div>
+                        <h4 className="font-serif font-bold text-sm text-forestGreen">{course.title}</h4>
+                        <p className="text-[11px] text-forestGreen/50">講師：{course.instructor} | 時程：{course.date}</p>
+                      </div>
+                      <div className="border-t border-forestGreen/5 pt-3 mt-4 flex justify-between items-center">
+                        <span className="text-xs font-mono font-bold">${course.fee} 元</span>
+                        <button onClick={()=>setCourseRegModal(course)} className="px-3 py-1 bg-forestGreen text-riceWhite rounded text-xs">預約席位</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* PRACTITIONER DIRECTORY VIEW */}
+            {activeTab === 'directory' && (
+              <div className="space-y-6 animate-fade-in">
+                <div className="text-center max-w-xl mx-auto space-y-1">
+                  <h2 className="text-xl font-serif font-bold">職域所持證專家名冊</h2>
+                  <p className="text-xs text-forestGreen/60">「來到職域所，找我們這群抱持職人精神的諮詢師就對了！」</p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {practitionersList.map(item => (
+                    <div key={item.id} className="bg-white rounded-xl border border-forestGreen/10 p-5 shadow-sm flex flex-col justify-between space-y-4">
+                      <div className="space-y-2">
+                        <div className="flex items-center space-x-3">
+                          <div className="h-10 w-10 bg-riceWhite rounded-lg flex items-center justify-center text-xl shadow-inner">{item.avatar}</div>
+                          <div>
+                            <h4 className="text-sm font-bold font-serif">{item.name}</h4>
+                            <span className="text-[10px] text-warmClay font-mono">{item.hours} ｜ {item.rate}</span>
+                          </div>
+                        </div>
+                        <p className="text-xs text-forestGreen/80 font-light leading-relaxed">{item.bio}</p>
+                      </div>
+                      <button onClick={()=>setBookingModal(item)} className="w-full py-2 border border-forestGreen/20 rounded-lg text-xs hover:bg-forestGreen hover:text-riceWhite transition-all">1對1 深度媒合預約</button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* BENEFITS VIEW */}
+            {activeTab === 'benefits' && (
+              <div className="space-y-6 max-w-2xl mx-auto animate-fade-in">
+                <div className="text-center border-b border-forestGreen/10 pb-4">
+                  <h2 className="text-xl font-serif font-bold">為什麼要在這裡打磨諮詢手藝？</h2>
+                  <p className="text-xs text-forestGreen/60 font-light">聽聽過往走過證照後斷層、在職域所建立執業底氣的夥伴心聲。</p>
+                </div>
+                <div className="space-y-4">
+                  <div className="bg-white p-5 rounded-xl border border-forestGreen/5 space-y-2 text-xs font-light">
+                    <strong className="text-warmClay block font-medium">✦ 跨界諮詢師 廖小姐：</strong>
+                    <p className="text-forestGreen/70">剛取證時手握大把工具理論，但面對真實個案的眼淚時手足無措。加入微光孵化計畫後，在導師 1對1 個案覆盤督導下解開卡點，目前已成功跨出付費執業的第一步！</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Pending Lounge Box */}
+            {currentUser && currentUser.role === 'practitioner' && currentUser.status === 'pending' && (
+              <div className="mt-12 bg-white border-2 border-dashed border-warmClay rounded-2xl p-6 text-xs space-y-3 animate-scale-up">
+                <h4 className="font-serif font-bold text-sm text-warmClay">⏳ 諮詢師加盟資格人工審核大廳 (B端)</h4>
+                <p className="text-forestGreen/80 font-light">您好，由於職域所定位為專業行會，新註冊諮詢師需經由後台管理員進行人工資歷覆盤審核。若您不小心選錯身分，可使用下方救援鈕進行身分重設。</p>
+                <button onClick={()=>{
+                  setCurrentUser({...currentUser, role: 'learner', status: undefined});
+                  sendVirtualEmail(currentUser.email, '身分重設成功', '已切換為常規成員。');
+                }} className="px-3 py-1.5 bg-warmClay text-white rounded font-medium">🎛️ 觸發「時空倒流鈕」身分救援</button>
+              </div>
+            )}
+
+          </main>
+
+          {/* Footer Component Layout */}
+          <footer className="bg-forestGreen text-riceWhite border-t border-shimmerGold/10 py-12 mt-20 text-xs font-light">
+            <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="space-y-2">
+                <h4 className="font-serif font-bold text-sm text-shimmerGold">職域所 CRAFT hub</h4>
+                <p className="text-riceWhite/70 leading-relaxed">我們致力於消除理論學習與市場執業之間的斷層，打造讓助人者能安心執業、獲得合理回報的共好生態圈。</p>
               </div>
               <div>
-                <label className="text-xs font-medium block mb-1">設定密碼</label>
-                <input required name="password" type="password" placeholder="請輸入密碼" className="w-full bg-white border border-[#2C4C3B]/10 rounded-lg p-2 text-xs text-[#2C4C3B] focus:ring-1 focus:ring-[#2C4C3B]" />
+                <h4 className="font-serif font-bold text-sm text-shimmerGold mb-2">快速分流</h4>
+                <ul className="space-y-1.5 text-riceWhite/80">
+                  <li><button onClick={()=>setActiveTab('home')} className="hover:text-white">回首頁 & 互動解碼</button></li>
+                  <li><button onClick={()=>setActiveTab('program')} className="hover:text-white">微光實戰陪跑計畫</button></li>
+                </ul>
               </div>
-
-              <button type="submit" className="w-full py-2.5 bg-[#2C4C3B] text-white rounded-lg font-medium text-xs hover:bg-[#2C4C3B]/90 shadow transition-colors">
-                {authMode === 'login' ? '安全登入' : registerRole === 'practitioner' ? '提交執業資格入所申請' : '註冊加入'}
-              </button>
-            </form>
-
-            <div className="relative flex items-center justify-center my-2 text-[10px] uppercase font-mono text-[#2C4C3B]/40">
-              <div className="absolute w-full border-t border-[#2C4C3B]/10"></div>
-              <span className="relative bg-[#F7F5F0] px-2">或使用第三方安全安全鏈結</span>
+              <div className="space-y-1">
+                <h4 className="font-serif font-bold text-sm text-shimmerGold">聯絡我們</h4>
+                <p>電子信箱：service@crafthub.com</p>
+                <p className="text-[10px] text-riceWhite/40 pt-1">© 2026 職域所 CRAFT hub. All rights reserved.</p>
+              </div>
             </div>
+          </footer>
 
-            <button 
-              onClick={() => handleMockLogin('', '', true)}
-              className="w-full py-2 bg-white text-[#2C4C3B] border border-[#2C4C3B]/20 rounded-lg text-xs font-medium hover:bg-[#2C4C3B]/5 transition-all flex items-center justify-center space-x-2 shadow-sm"
-            >
-              <span>🌐 透過 Google 帳戶一鍵登入 / 註冊</span>
-            </button>
+          {/* CRM floating window */}
+          <div className="fixed bottom-6 right-6 z-50">
+            {isCrmOpen ? (
+              <div className="w-80 sm:w-96 bg-white border border-forestGreen/20 rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-scale-up text-xs">
+                <div className="bg-forestGreen text-riceWhite p-4 flex justify-between items-center">
+                  <div>
+                    <h4 className="font-bold text-shimmerGold">職域所線上助理在線</h4>
+                    <p className="text-[10px] text-riceWhite/60">CRM 前世瀏覽軌跡已綁定</p>
+                  </div>
+                  <button onClick={()=>setIsCrmOpen(false)} className="text-sm font-bold">✕</button>
+                </div>
+                <div className="p-4 h-64 overflow-y-auto space-y-3 bg-riceWhite/40">
+                  {crmMessages.map((msg, i) => (
+                    <div key={i} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+                      <div className={`p-2.5 rounded-xl max-w-[85%] leading-relaxed ${msg.sender === 'user' ? 'bg-warmClay text-white' : 'bg-white border border-forestGreen/5'}`}>
+                        {msg.text}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <form onSubmit={handleCrmSend} className="p-3 border-t flex items-center space-x-2 bg-white">
+                  <input type="text" value={crmInput} onChange={(e)=>setCrmInput(e.target.value)} placeholder="輸入您的提問（如：續證、陪跑費用）..." className="flex-1 bg-riceWhite rounded-lg p-2 border-0 text-xs focus:ring-1 focus:ring-forestGreen" />
+                  <button type="submit" className="px-3 py-2 bg-forestGreen text-white rounded-lg font-medium">送出</button>
+                </form>
+              </div>
+            ) : (
+              <button onClick={()=>setIsCrmOpen(true)} className="h-14 w-14 bg-warmClay text-white rounded-full flex items-center justify-center shadow-xl font-bold text-lg border border-shimmerGold/40 animate-bounce">💬</button>
+            )}
+          </div>
 
-            <div className="text-center text-xs pt-1 text-[#2C4C3B]/70">
-              {authMode === 'login' ? (
-                <p>還不是行會成員？ <button onClick={() => setAuthMode('register')} className="text-[#C67C56] font-semibold underline">立即註冊分流</button></p>
-              ) : (
-                <p>已經有行會帳號？ <button onClick={() => setAuthMode('login')} className="text-[#C67C56] font-semibold underline">返回登入頁</button></p>
-              )}
+          {/* Modal Popups */}
+          {authMode && (
+            <div className="fixed inset-0 z-50 bg-forestGreen/60 backdrop-blur-sm flex items-center justify-center p-4">
+              <div className="bg-riceWhite rounded-2xl max-w-sm w-full p-6 relative shadow-2xl space-y-4 text-xs">
+                <button onClick={()=>setAuthMode(null)} className="absolute top-4 right-4 text-sm font-bold">✕</button>
+                <h3 className="text-base font-serif font-bold text-center">{authMode === 'login' ? '歡迎回到 職域所' : '加入行會共好圈'}</h3>
+                
+                {authMode === 'register' && (
+                  <div className="flex bg-forestGreen/5 p-1 rounded-lg text-center font-medium">
+                    <button onClick={()=>setRegisterRole('learner')} className={`flex-1 py-1 rounded ${registerRole==='learner'?'bg-forestGreen text-white':''}`}>學員 (C端)</button>
+                    <button onClick={()=>setRegisterRole('practitioner')} className={`flex-1 py-1 rounded ${registerRole==='practitioner'?'bg-forestGreen text-white':''}`}>持證諮詢師 (B端)</button>
+                  </div>
+                )}
+
+                <form onSubmit={(e)=>{
+                  e.preventDefault();
+                  const fd = new FormData(e.target);
+                  if(authMode === 'login') handleMockLogin(fd.get('email'), fd.get('pass'));
+                  else handleMockRegister(fd.get('name'), fd.get('email'), fd.get('pass'));
+                }} className="space-y-3">
+                  {authMode==='register' && (
+                    <div><label className="font-medium block mb-0.5">真實姓名</label><input required name="name" type="text" class="w-full p-2 rounded border border-forestGreen/10" /></div>
+                  )}
+                  <div><label className="font-medium block mb-0.5">電子郵件 (輸入 admin@crafthub.com 體驗最高管理端)</label><input required name="email" type="email" class="w-full p-2 rounded border border-forestGreen/10" /></div>
+                  <div><label className="font-medium block mb-0.5">密碼</label><input required name="pass" type="password" class="w-full p-2 rounded border border-forestGreen/10" /></div>
+                  <button type="submit" className="w-full py-2 bg-forestGreen text-white rounded-lg font-bold">確認送出</button>
+                </form>
+
+                <div className="relative flex items-center justify-center my-2 text-[10px] font-mono text-forestGreen/30">
+                  <div className="absolute w-full border-t"></div><span class="relative bg-riceWhite px-2">OR</span>
+                </div>
+                <button onClick={()=>handleMockLogin('','',true)} className="w-full py-2 bg-white border rounded-lg hover:bg-forestGreen/5 transition-all">🌐 使用 Google 帳戶一鍵登入</button>
+
+                <div className="text-center pt-2">
+                  {authMode==='login' ? <p>尚未加入？ <button onClick={()=>setAuthMode('register')} className="text-warmClay font-bold underline">立即註冊</button></p> : <p>已有帳號？ <button onClick={()=>setAuthMode('login')} className="text-warmClay font-bold underline">返回登入</button></p>}
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          )}
 
-      {/* 諮詢師 1 對 1 預約媒合確認彈窗 */}
-      {bookingModal && (
-        <div className="fixed inset-0 z-50 bg-[#2C4C3B]/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-sm w-full p-6 relative border border-[#2C4C3B]/10 space-y-4 shadow-2xl text-xs">
-            <button onClick={() => setBookingModal(null)} className="absolute top-4 right-4 text-sm font-bold">✕</button>
-            <h3 className="text-base font-serif font-bold text-[#2C4C3B]">預約職引者 1對1 深度導航</h3>
-            <p className="text-[#2C4C3B]/80 font-light">您正準備預約持證專家：<strong>{bookingModal.name} 老師</strong></p>
-            <p className="bg-[#F7F5F0] p-3 rounded-lg text-[#2C4C3B]/70 font-mono leading-relaxed text-[11px]">
-              系統偵測到您目前的諮詢師或學員屬性。點擊下方確認送出後，系統將自動為您生成預約工單，並即時串接行事曆媒合。
-            </p>
-            <button 
-              onClick={() => {
-                alert(`🎉 預約工單提交成功！\n系統已發送確認信件至您的電子郵件信箱。諮詢師 ${bookingModal.name} 將於 24 小時內與您聯繫確認線上 Zoom 會議連結。`);
-                setBookingModal(null);
-              }}
-              className="w-full py-2 bg-[#C67C56] text-white rounded-xl font-bold hover:bg-[#C67C56]/90 transition-colors shadow"
-            >
-              確認送出預約申請
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* 課程報名確認彈窗 */}
-      {courseRegModal && (
-        <div className="fixed inset-0 z-50 bg-[#2C4C3B]/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-sm w-full p-6 relative border border-[#2C4C3B]/10 space-y-4 shadow-2xl text-xs">
-            <button onClick={() => setCourseRegModal(null)} className="absolute top-4 right-4 text-sm font-bold">✕</button>
-            <span className="text-[10px] font-mono font-bold text-[#C67C56] block">{courseRegModal.type}</span>
-            <h3 className="text-base font-serif font-bold text-[#2C4C3B] -mt-2">{courseRegModal.title}</h3>
-            <div className="space-y-1 text-[#2C4C3B]/80 font-light">
-              <p>💰 課程費用：<strong>${courseRegModal.fee.toLocaleString()} 元</strong></p>
-              <p>🎓 預計取得：<span className="text-[#C67C56] font-mono font-bold">{courseRegModal.credits}</span></p>
-              <p>📅 開課時間：{courseRegModal.date}</p>
+          {bookingModal && (
+            <div className="fixed inset-0 z-50 bg-forestGreen/60 backdrop-blur-sm flex items-center justify-center p-4">
+              <div className="bg-white rounded-xl p-6 max-w-sm w-full space-y-4 text-xs">
+                <h3 className="font-serif font-bold text-sm">確認預約對話</h3>
+                <p>您即將向 <strong>{bookingModal.name} 老師</strong> 提交工單預約，系統已自動將您目前的卡點歷程與對話記錄轉譯並與諮詢師同步對接。</p>
+                <div className="flex space-x-2 pt-2">
+                  <button onClick={()=>setBookingModal(null)} className="flex-1 py-2 bg-riceWhite rounded">取消</button>
+                  <button onClick={()=>{alert('🎉 預約工單已順利送出！諮詢師將於 24 小時內發送視訊對談連結。'); setBookingModal(null);}} className="flex-1 py-2 bg-warmClay text-white rounded font-bold">確認提交</button>
+                </div>
+              </div>
             </div>
-            <button 
-              onClick={() => {
-                alert(`🎉 席位報名扣款模擬成功！\n您已順利鎖定《${courseRegModal.title}》的限定參與席位。學分已動態累加至您的 CEP 預期歷史進度條中！`);
-                setCourseRegModal(null);
-              }}
-              className="w-full py-2 bg-[#2C4C3B] text-white rounded-xl font-bold hover:bg-[#2C4C3B]/90 transition-colors shadow"
-            >
-              確認報名並鎖定席位
-            </button>
-          </div>
+          )}
+
+          {courseRegModal && (
+            <div className="fixed inset-0 z-50 bg-forestGreen/60 backdrop-blur-sm flex items-center justify-center p-4">
+              <div className="bg-white rounded-xl p-6 max-w-sm w-full space-y-4 text-xs">
+                <h3 className="font-serif font-bold text-sm">確認報名進修席位</h3>
+                <p>課程名稱：<strong>{courseRegModal.title}</strong></p>
+                <p>預計取得權重：<span className="text-warmClay font-mono font-bold">{courseRegModal.credits}</span></p>
+                <div className="flex space-x-2 pt-2">
+                  <button onClick={()=>setCourseRegModal(null)} className="flex-1 py-2 bg-riceWhite rounded">返回</button>
+                  <button onClick={()=>{alert(`🎉 報名扣款成功！預期換證積分已安全鎖定。`); setCourseRegModal(null);}} className="flex-1 py-2 bg-forestGreen text-white rounded font-bold">確認預約</button>
+                </div>
+              </div>
+            </div>
+          )}
+
         </div>
-      )}
+      );
+    }
 
-      {/* Tailwind 簡易動畫注入 CSS */}
-      <style>{`
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes scaleUp { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
-        .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
-        .animate-scale-up { animation: scaleUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-      `}</style>
-
-    </div>
-  );
-}
+    const root = banknotes =组件;
+    const container = document.getElementById('root');
+    const reactRoot =组件 || ReactDOM.createRoot(container);
+    reactRoot.render(<App />);
+  </script>
+</body>
+</html>
